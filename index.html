@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenFocus Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app-container">
+        <header>
+            <h1>ZenFocus</h1>
+            <div id="weather-widget" class="widget">
+                <div class="weather-icon"></div>
+                <div class="weather-temp">Loading...</div>
+                <div class="weather-desc"></div>
+            </div>
+        </header>
+
+        <main>
+            <section id="timer-section" class="widget">
+                <h2>Focus Timer</h2>
+                <div class="timer-display">25:00</div>
+                <div class="timer-controls">
+                    <button id="start-btn">Start</button>
+                    <button id="pause-btn">Pause</button>
+                    <button id="reset-btn">Reset</button>
+                </div>
+                <div class="timer-settings">
+                    <label>Work: <input type="number" id="work-duration" value="25" min="1" max="60"></label>
+                    <label>Break: <input type="number" id="break-duration" value="5" min="1" max="30"></label>
+                </div>
+            </section>
+
+            <section id="tasks-section" class="widget">
+                <h2>Tasks</h2>
+                <div class="task-input-container">
+                    <input type="text" id="new-task-input" placeholder="Add a new task...">
+                    <button id="add-task-btn">+</button>
+                </div>
+                <ul id="task-list">
+                    <!-- Tasks will be dynamically added here -->
+                </ul>
+            </section>
+        </main>
+
+        <footer>
+            <div id="background-credit">Photo by <span id="photo-author">Unsplash</span></div>
+        </footer>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
