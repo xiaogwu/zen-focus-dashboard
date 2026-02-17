@@ -1,0 +1,192 @@
+:root {
+    --bg-color: #f4f4f9;
+    --text-color: #333;
+    --primary-color: #4a90e2;
+    --secondary-color: #50e3c2;
+    --accent-color: #ff5a5f;
+    --widget-bg: rgba(255, 255, 255, 0.85);
+    --border-radius: 12px;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --spacing-unit: 1rem;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: background-image 0.5s ease-in-out;
+}
+
+#app-container {
+    width: 90%;
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--spacing-unit);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-unit);
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.widget {
+    background-color: var(--widget-bg);
+    padding: var(--spacing-unit);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+main {
+    display: grid;
+    grid-template-columns: 1fr; /* Default single column for mobile */
+    gap: var(--spacing-unit);
+}
+
+@media (min-width: 768px) {
+    main {
+        grid-template-columns: 1fr 1fr; /* Two columns for larger screens */
+    }
+}
+
+/* Timer Styles */
+#timer-section {
+    text-align: center;
+}
+
+.timer-display {
+    font-size: 4rem;
+    font-weight: bold;
+    color: var(--text-color);
+    margin: 1rem 0;
+}
+
+.timer-controls button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    margin: 0 0.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.timer-controls button:hover {
+    background-color: #357abd;
+}
+
+.timer-settings {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.timer-settings input {
+    width: 60px;
+    padding: 0.3rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Tasks Styles */
+.task-input-container {
+    display: flex;
+    margin-bottom: 1rem;
+}
+
+#new-task-input {
+    flex-grow: 1;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 1rem;
+}
+
+#add-task-btn {
+    padding: 0.8rem 1.2rem;
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: background-color 0.3s;
+}
+
+#add-task-btn:hover {
+    background-color: #3ecfaf;
+}
+
+#task-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    border-bottom: 1px solid #eee;
+    background-color: white;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    transition: transform 0.2s;
+}
+
+.task-item.completed span {
+    text-decoration: line-through;
+    color: #aaa;
+}
+
+.task-item button.delete-btn {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    cursor: pointer;
+    font-size: 1.2rem;
+    margin-left: 0.5rem;
+}
+
+/* Weather Styles */
+#weather-widget {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+footer {
+    text-align: right;
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 1rem;
+}
