@@ -23,10 +23,33 @@ export class BackgroundManager {
     async setBackground() {
         const timeOfDay = this.getTimeOfDay();
         let imageData = null;
+        const cacheKey = 'zenfocus_bg_cache';
 
-        if (this.apiKey) {
+        // Check cache first
+        try {
+            const cachedData = localStorage.getItem(cacheKey);
+            if (cachedData) {
+                const { timestamp, image, storedTimeOfDay } = JSON.parse(cachedData);
+                const now = Date.now();
+                // Cache valid for 1 hour (3600000 ms) and if time of day matches
+                if (now - timestamp < 3600000 && storedTimeOfDay === timeOfDay) {
+                    imageData = image;
+                }
+            }
+        } catch (e) {
+            console.warn('Error reading background cache:', e);
+            localStorage.removeItem(cacheKey);
+        }
+
+        if (!imageData && this.apiKey) {
             try {
                 imageData = await this.fetchUnsplashImage(timeOfDay);
+                // Cache the new image
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    timestamp: Date.now(),
+                    image: imageData,
+                    storedTimeOfDay: timeOfDay
+                }));
             } catch (error) {
                 console.warn('Failed to fetch Unsplash image:', error);
             }
