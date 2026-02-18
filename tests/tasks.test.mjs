@@ -89,6 +89,35 @@ function runTests() {
         failed++;
     }
 
+    // Test 3: Add Empty Task
+    try {
+        console.log('Test: addTask with empty input');
+
+        // Setup
+        global.localStorage.clear();
+        const listElement = global.document.createElement('ul');
+        const inputElement = global.document.createElement('input');
+        const addButtonElement = global.document.createElement('button');
+        const taskManager = new TaskManager(listElement, inputElement, addButtonElement);
+
+        // Action 1: Empty String
+        inputElement.value = '';
+        taskManager.addTask();
+        assert(taskManager.tasks.length === 0, 'Should not add task with empty string');
+
+        // Action 2: Whitespace String
+        inputElement.value = '   ';
+        taskManager.addTask();
+        assert(taskManager.tasks.length === 0, 'Should not add task with whitespace only');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
     console.log(`\nTests completed. Passed: ${passed}, Failed: ${failed}`);
     if (failed > 0) process.exit(1);
 }
