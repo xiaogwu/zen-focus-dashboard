@@ -18,13 +18,17 @@ export class TaskManager {
         // Event delegation for delete and toggle
         this.listElement.addEventListener('click', (e) => {
             if (e.target.classList.contains('delete-btn')) {
-                const id = parseInt(e.target.dataset.id, 10);
+                const id = this.getTaskId(e.target);
                 this.deleteTask(id);
             } else if (e.target.tagName === 'LI' || e.target.tagName === 'SPAN') {
-                const id = parseInt(e.target.closest('li').dataset.id, 10);
+                const id = this.getTaskId(e.target);
                 this.toggleTask(id);
             }
         });
+    }
+
+    getTaskId(element) {
+        return parseInt(element.closest('li').dataset.id, 10);
     }
 
     saveTasks() {
