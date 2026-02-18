@@ -11,6 +11,7 @@ export class PomodoroTimer {
         this.timerId = null;
         this.isWorkSession = true;
         this.isRunning = false;
+        this.audioCtx = null;
 
         this.bindEvents();
         this.updateDisplay();
@@ -101,14 +102,24 @@ export class PomodoroTimer {
         // Using a data URI for a simple beep sound could work, but let's stick to alert for simplicity as per plan
         // Or I can try to use a simple oscillator
         try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) {
-                const ctx = new AudioContext();
-                const oscillator = ctx.createOscillator();
-                const gainNode = ctx.createGain();
+            if (!this.audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    this.audioCtx = new AudioContext();
+                }
+            }
+
+            if (this.audioCtx) {
+                // Ensure context is running (it might be suspended by the browser)
+                if (this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume();
+                }
+
+                const oscillator = this.audioCtx.createOscillator();
+                const gainNode = this.audioCtx.createGain();
 
                 oscillator.connect(gainNode);
-                gainNode.connect(ctx.destination);
+                gainNode.connect(this.audioCtx.destination);
 
                 oscillator.type = 'sine';
                 oscillator.frequency.value = 880; // A5
