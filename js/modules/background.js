@@ -95,8 +95,6 @@ export class BackgroundManager {
 
         if (creditElement && authorElement) {
             authorElement.textContent = image.author;
-            // Optionally make it a link
-            // authorElement.innerHTML = `<a href="${image.link}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">${image.author}</a>`;
         }
     }
 }
