@@ -23,17 +23,23 @@ export class PomodoroTimer {
 
         this.workInput.addEventListener('change', () => {
             if (!this.isRunning && this.isWorkSession) {
-                this.timeLeft = this.workInput.value * 60;
+                this.timeLeft = this.getValidTime(this.workInput) * 60;
                 this.updateDisplay();
             }
         });
 
         this.breakInput.addEventListener('change', () => {
             if (!this.isRunning && !this.isWorkSession) {
-                this.timeLeft = this.breakInput.value * 60;
+                this.timeLeft = this.getValidTime(this.breakInput) * 60;
                 this.updateDisplay();
             }
         });
+    }
+
+    getValidTime(input) {
+        const value = Math.max(1, parseInt(input.value) || 1);
+        input.value = value;
+        return value;
     }
 
     start() {
@@ -61,7 +67,7 @@ export class PomodoroTimer {
     reset() {
         this.pause();
         this.isWorkSession = true;
-        this.timeLeft = this.workInput.value * 60;
+        this.timeLeft = this.getValidTime(this.workInput) * 60;
         this.updateDisplay();
     }
 
@@ -72,10 +78,10 @@ export class PomodoroTimer {
         // Switch session
         this.isWorkSession = !this.isWorkSession;
         if (this.isWorkSession) {
-            this.timeLeft = this.workInput.value * 60;
+            this.timeLeft = this.getValidTime(this.workInput) * 60;
             setTimeout(() => alert('Break is over! Time to work.'), 10);
         } else {
-            this.timeLeft = this.breakInput.value * 60;
+            this.timeLeft = this.getValidTime(this.breakInput) * 60;
             setTimeout(() => alert('Work session complete! Take a break.'), 10);
         }
         this.updateDisplay();
