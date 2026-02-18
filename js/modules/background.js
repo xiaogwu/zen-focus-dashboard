@@ -24,9 +24,31 @@ export class BackgroundManager {
         const timeOfDay = this.getTimeOfDay();
         let imageData = null;
 
-        if (this.apiKey) {
+        // Try to load from cache
+        const cachedData = localStorage.getItem('zenfocus_bg_cache');
+        if (cachedData) {
+            try {
+                const parsed = JSON.parse(cachedData);
+                const now = new Date().getTime();
+                const oneHour = 60 * 60 * 1000;
+
+                if (now - parsed.timestamp < oneHour && parsed.timeOfDay === timeOfDay) {
+                    imageData = parsed.imageData;
+                }
+            } catch (e) {
+                console.warn('Failed to parse cached background:', e);
+            }
+        }
+
+        if (!imageData && this.apiKey) {
             try {
                 imageData = await this.fetchUnsplashImage(timeOfDay);
+                // Cache the new image
+                localStorage.setItem('zenfocus_bg_cache', JSON.stringify({
+                    timestamp: new Date().getTime(),
+                    timeOfDay: timeOfDay,
+                    imageData: imageData
+                }));
             } catch (error) {
                 console.warn('Failed to fetch Unsplash image:', error);
             }
