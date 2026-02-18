@@ -83,6 +83,11 @@ export class BackgroundManager {
     }
 
     applyBackground(image) {
+        if (!image || !image.url || !image.url.startsWith('https://images.unsplash.com/')) {
+            console.warn('Blocked attempt to load non-Unsplash image:', image?.url);
+            return;
+        }
+
         document.body.style.backgroundImage = `url('${image.url}')`;
 
         const creditElement = document.getElementById('background-credit');
