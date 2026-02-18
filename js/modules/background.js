@@ -34,8 +34,12 @@ export class BackgroundManager {
 
         if (!imageData) {
             // Use fallback based on time of day (mocking "dynamic" aspect)
-            // Just picking random for now to keep it simple, or rotating
-            const index = Math.floor(Math.random() * this.fallbackImages.length);
+            let index = 0; // Default to morning
+            if (timeOfDay === 'afternoon') {
+                index = 1;
+            } else if (timeOfDay === 'evening') {
+                index = 2;
+            }
             imageData = this.fallbackImages[index];
         }
 
