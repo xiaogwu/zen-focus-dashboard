@@ -11,6 +11,7 @@ export class PomodoroTimer {
         this.timerId = null;
         this.isWorkSession = true;
         this.isRunning = false;
+        this.audioCtx = null;
 
         this.bindEvents();
         this.updateDisplay();
@@ -23,17 +24,23 @@ export class PomodoroTimer {
 
         this.workInput.addEventListener('change', () => {
             if (!this.isRunning && this.isWorkSession) {
-                this.timeLeft = this.workInput.value * 60;
+                this.timeLeft = this.getValidTime(this.workInput) * 60;
                 this.updateDisplay();
             }
         });
 
         this.breakInput.addEventListener('change', () => {
             if (!this.isRunning && !this.isWorkSession) {
-                this.timeLeft = this.breakInput.value * 60;
+                this.timeLeft = this.getValidTime(this.breakInput) * 60;
                 this.updateDisplay();
             }
         });
+    }
+
+    getValidTime(input) {
+        const value = Math.max(1, parseInt(input.value) || 1);
+        input.value = value;
+        return value;
     }
 
     start() {
@@ -61,7 +68,7 @@ export class PomodoroTimer {
     reset() {
         this.pause();
         this.isWorkSession = true;
-        this.timeLeft = this.workInput.value * 60;
+        this.timeLeft = this.getValidTime(this.workInput) * 60;
         this.updateDisplay();
     }
 
@@ -72,10 +79,10 @@ export class PomodoroTimer {
         // Switch session
         this.isWorkSession = !this.isWorkSession;
         if (this.isWorkSession) {
-            this.timeLeft = this.workInput.value * 60;
+            this.timeLeft = this.getValidTime(this.workInput) * 60;
             setTimeout(() => alert('Break is over! Time to work.'), 10);
         } else {
-            this.timeLeft = this.breakInput.value * 60;
+            this.timeLeft = this.getValidTime(this.breakInput) * 60;
             setTimeout(() => alert('Work session complete! Take a break.'), 10);
         }
         this.updateDisplay();
@@ -101,14 +108,24 @@ export class PomodoroTimer {
         // Using a data URI for a simple beep sound could work, but let's stick to alert for simplicity as per plan
         // Or I can try to use a simple oscillator
         try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) {
-                const ctx = new AudioContext();
-                const oscillator = ctx.createOscillator();
-                const gainNode = ctx.createGain();
+            if (!this.audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    this.audioCtx = new AudioContext();
+                }
+            }
+
+            if (this.audioCtx) {
+                // Ensure context is running (it might be suspended by the browser)
+                if (this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume();
+                }
+
+                const oscillator = this.audioCtx.createOscillator();
+                const gainNode = this.audioCtx.createGain();
 
                 oscillator.connect(gainNode);
-                gainNode.connect(ctx.destination);
+                gainNode.connect(this.audioCtx.destination);
 
                 oscillator.type = 'sine';
                 oscillator.frequency.value = 880; // A5

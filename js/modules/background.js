@@ -29,11 +29,13 @@ export class BackgroundManager {
         try {
             const cachedData = localStorage.getItem(cacheKey);
             if (cachedData) {
-                const { timestamp, image, storedTimeOfDay } = JSON.parse(cachedData);
+                const parsed = JSON.parse(cachedData);
                 const now = Date.now();
-                // Cache valid for 1 hour (3600000 ms) and if time of day matches
-                if (now - timestamp < 3600000 && storedTimeOfDay === timeOfDay) {
-                    imageData = image;
+                const oneHour = 60 * 60 * 1000;
+
+                // Cache valid for 1 hour and if time of day matches
+                if (now - parsed.timestamp < oneHour && parsed.timeOfDay === timeOfDay) {
+                    imageData = parsed.imageData;
                 }
             }
         } catch (e) {
@@ -47,8 +49,8 @@ export class BackgroundManager {
                 // Cache the new image
                 localStorage.setItem(cacheKey, JSON.stringify({
                     timestamp: Date.now(),
-                    image: imageData,
-                    storedTimeOfDay: timeOfDay
+                    timeOfDay: timeOfDay,
+                    imageData: imageData
                 }));
             } catch (error) {
                 console.warn('Failed to fetch Unsplash image:', error);
@@ -56,9 +58,10 @@ export class BackgroundManager {
         }
 
         if (!imageData) {
-            // Use fallback based on time of day (mocking "dynamic" aspect)
-            // Just picking random for now to keep it simple, or rotating
-            const index = Math.floor(Math.random() * this.fallbackImages.length);
+            // Use fallback based on time of day
+            let index = 0;
+            if (timeOfDay === 'afternoon') index = 1;
+            else if (timeOfDay === 'evening') index = 2;
             imageData = this.fallbackImages[index];
         }
 
@@ -84,6 +87,11 @@ export class BackgroundManager {
     }
 
     applyBackground(image) {
+        if (!image || !image.url || !image.url.startsWith('https://images.unsplash.com/')) {
+            console.warn('Blocked attempt to load non-Unsplash image:', image?.url);
+            return;
+        }
+
         document.body.style.backgroundImage = `url('${image.url}')`;
 
         const creditElement = document.getElementById('background-credit');
