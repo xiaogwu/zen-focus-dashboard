@@ -1,3 +1,6 @@
+const CACHE_KEY = 'zenfocus_weather_cache';
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
 export class WeatherWidget {
     constructor(widgetElement) {
         this.widgetElement = widgetElement;
@@ -8,6 +11,21 @@ export class WeatherWidget {
     }
 
     async init() {
+        // Check cache first
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                const { timestamp, data } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    this.updateDisplay(data);
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to read weather cache:', e);
+            try { localStorage.removeItem(CACHE_KEY); } catch (e2) {}
+        }
+
         if (!navigator.geolocation) {
             this.showError('Geolocation not supported');
             return;
@@ -35,11 +53,23 @@ export class WeatherWidget {
             if (!response.ok) throw new Error('Weather API Error');
             const data = await response.json();
 
-            this.updateDisplay({
+            const displayData = {
                 temp: Math.round(data.main.temp),
                 description: data.weather[0].description,
                 icon: data.weather[0].icon
-            });
+            };
+
+            this.updateDisplay(displayData);
+
+            // Cache the result safely
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    timestamp: Date.now(),
+                    data: displayData
+                }));
+            } catch (e) {
+                console.warn('Failed to cache weather data:', e);
+            }
         } catch (error) {
             console.warn('Failed to fetch weather:', error);
             this.showError('Weather unavailable');
