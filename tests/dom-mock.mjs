@@ -65,15 +65,37 @@ class MockHTMLElement {
     }
 
     appendChild(child) {
+        if (child.tagName === 'DOCUMENT_FRAGMENT') {
+            child.children.forEach(c => {
+                this.children.push(c);
+                c.parentElement = this;
+            });
+            child.children = [];
+            return child;
+        }
         this.children.push(child);
         child.parentElement = this;
+        return child;
     }
 
     insertBefore(newNode, referenceNode) {
         if (!referenceNode) {
-            this.appendChild(newNode);
-            return newNode;
+            return this.appendChild(newNode);
         }
+
+        if (newNode.tagName === 'DOCUMENT_FRAGMENT') {
+             const index = this.children.indexOf(referenceNode);
+             if (index > -1) {
+                 const newChildren = [...newNode.children];
+                 newChildren.forEach(c => c.parentElement = this);
+                 this.children.splice(index, 0, ...newChildren);
+                 newNode.children = [];
+                 return newNode;
+             } else {
+                 return this.appendChild(newNode);
+             }
+        }
+
         const index = this.children.indexOf(referenceNode);
         if (index > -1) {
             this.children.splice(index, 0, newNode);
@@ -117,12 +139,11 @@ class MockHTMLElement {
             }));
         }
     }
+}
 
-    remove() {
-        if (this.parentElement) {
-            this.parentElement.children = this.parentElement.children.filter(c => c !== this);
-            this.parentElement = null;
-        }
+class MockDocumentFragment extends MockHTMLElement {
+    constructor() {
+        super('DOCUMENT_FRAGMENT');
     }
 }
 
@@ -130,6 +151,7 @@ global.MockHTMLElement = MockHTMLElement;
 
 global.document = {
     createElement: (tag) => new MockHTMLElement(tag),
+    createDocumentFragment: () => new MockDocumentFragment(),
     getElementById: (id) => new MockHTMLElement('div'), // default to div
     querySelector: (selector) => new MockHTMLElement('div'),
     body: new MockHTMLElement('body')
@@ -149,14 +171,6 @@ global.sessionStorage = {
     setItem: (key, value) => { global.sessionStorage.store[key] = value.toString(); },
     clear: () => { global.sessionStorage.store = {}; },
     removeItem: (key) => { delete global.sessionStorage.store[key]; }
-};
-
-global.sessionStorage = {
-    store: {},
-    getItem: (key) => global.sessionStorage.store[key] || null,
-    setItem: (key, value) => { global.sessionStorage.store[key] = value.toString(); },
-    removeItem: (key) => { delete global.sessionStorage.store[key]; },
-    clear: () => { global.sessionStorage.store = {}; }
 };
 
 // Mock window/global properties if needed
