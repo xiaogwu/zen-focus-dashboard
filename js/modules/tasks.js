@@ -64,12 +64,19 @@ export class TaskManager {
     }
 
     render() {
+        if (this.tasks.length === 0) {
+            this.listElement.innerHTML = '';
+            return;
+        }
+
         const existingElements = new Map();
         Array.from(this.listElement.children).forEach(li => {
             if (li.dataset.id) {
                 existingElements.set(li.dataset.id, li);
             }
         });
+
+        const fragment = document.createDocumentFragment();
 
         this.tasks.forEach((task, index) => {
             const taskId = String(task.id);
@@ -83,14 +90,16 @@ export class TaskManager {
             }
 
             const currentChild = this.listElement.children[index];
-            if (currentChild !== li) {
-                if (currentChild) {
+            if (currentChild) {
+                if (currentChild !== li) {
                     this.listElement.insertBefore(li, currentChild);
-                } else {
-                    this.listElement.appendChild(li);
                 }
+            } else {
+                fragment.appendChild(li);
             }
         });
+
+        this.listElement.appendChild(fragment);
 
         existingElements.forEach(li => li.remove());
     }
