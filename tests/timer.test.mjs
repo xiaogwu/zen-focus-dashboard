@@ -274,6 +274,32 @@ function runTests() {
         failed++;
     }
 
+    // Test 7: Verify ClearInterval on Pause
+    try {
+        console.log('Test: Verify ClearInterval on Pause');
+        const els = createElements();
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+
+        timer.start();
+        assert(intervals[timer.timerId] !== undefined, 'Interval should be active after start');
+
+        timer.pause();
+        assert(intervals[timer.timerId] === undefined, 'Interval should be cleared after pause');
+        assertEqual(timer.isRunning, false, 'isRunning should be false after pause');
+
+        // Check idempotency
+        const timerIdBefore = timer.timerId;
+        timer.pause();
+        assertEqual(timer.timerId, timerIdBefore, 'timerId should not change on repeated pause');
+        assert(intervals[timer.timerId] === undefined, 'Interval should remain cleared');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
     console.log(`\nTests completed. Passed: ${passed}, Failed: ${failed}`);
     if (failed > 0) process.exit(1);
 }
