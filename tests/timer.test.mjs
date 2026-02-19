@@ -33,9 +33,15 @@ global.window.AudioContext = class {
 };
 global.window.webkitAudioContext = global.window.AudioContext;
 
-// Mock alert
+// Mock alert (deprecated in favor of notifier, but kept for safety)
 global.alert = (msg) => {
     // console.log('Alert:', msg);
+};
+
+// Mock Notifier
+let lastNotification = null;
+const mockNotifier = (message, type) => {
+    lastNotification = { message, type };
 };
 
 // Mock document.title
@@ -286,6 +292,11 @@ function runTests() {
         assertEqual(timer.isRunning, false, 'Timer should pause after completion');
         assertEqual(timer.isWorkSession, false, 'Should switch to break session');
         assertEqual(timer.timeLeft, 5 * 60, 'Should set time to break duration (5 min)');
+
+        // Check Notification
+        assert(lastNotification !== null, 'Notification should be displayed');
+        assert(lastNotification.message === 'Work session complete! Take a break.', 'Notification message incorrect');
+        assert(lastNotification.type === 'success', 'Notification type incorrect');
 
         console.log('PASS');
         passed++;

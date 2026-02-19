@@ -1,3 +1,5 @@
+import { showNotification } from './notification.js';
+
 export class PomodoroTimer {
     constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput, autoStartCheckbox) {
         this.displayElement = displayElement;
