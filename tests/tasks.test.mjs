@@ -67,6 +67,40 @@ function runTests() {
         failed++;
     }
 
+    // Test 7: Corrupted LocalStorage
+    try {
+        console.log('Test: Initialization with corrupted LocalStorage');
+
+        // Setup: Corrupt the data
+        global.localStorage.setItem('zenFocusTasks', 'INVALID JSON {');
+
+        const listElement = global.document.createElement('ul');
+        const inputElement = global.document.createElement('input');
+        const addButtonElement = global.document.createElement('button');
+
+        // Action: Initialize TaskManager (should not throw)
+        let errorThrown = false;
+        let taskManager;
+        try {
+            taskManager = new TaskManager(listElement, inputElement, addButtonElement);
+        } catch (e) {
+            errorThrown = true;
+            console.error(e);
+        }
+
+        // Verification
+        assert(!errorThrown, 'TaskManager initialization should not throw on corrupted data');
+        assert(taskManager.tasks.length === 0, 'Tasks should be empty after corruption reset');
+        assert(global.localStorage.getItem('zenFocusTasks') === '[]', 'LocalStorage should be reset to empty array');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
     // Test 2: Invalid ID
     try {
         console.log('Test: toggleTask with invalid ID');

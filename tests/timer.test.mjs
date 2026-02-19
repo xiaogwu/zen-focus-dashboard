@@ -138,7 +138,7 @@ function runTests() {
         els.workInput.value = '25';
         els.breakInput.value = '5';
 
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
 
         assertEqual(els.display.textContent, '25:00', 'Initial display should be 25:00');
         assertEqual(timer.timeLeft, 25 * 60, 'Initial timeLeft should be 1500 seconds');
@@ -158,7 +158,7 @@ function runTests() {
         console.log('Test: Start Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
 
         timer.start();
 
@@ -184,7 +184,7 @@ function runTests() {
         console.log('Test: Pause Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
 
         timer.start();
         advanceTime(5);
@@ -211,7 +211,7 @@ function runTests() {
         console.log('Test: Reset Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
 
         timer.start();
         advanceTime(100);
@@ -236,7 +236,7 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '25';
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
 
         // Change work input
         els.workInput.value = '30';
@@ -312,7 +312,7 @@ function runTests() {
         console.log('Test: Start Timer When Already Running');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
 
         timer.start();
         const initialTimerId = timer.timerId;
@@ -347,7 +347,7 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '25';
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, undefined, mockNotifier);
 
         // Scenario: Reset from Break Session
         timer.isWorkSession = false; // Force break session state

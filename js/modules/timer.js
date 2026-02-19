@@ -1,3 +1,4 @@
+
 import { showNotification } from './notification.js';
 
 export class PomodoroTimer {
