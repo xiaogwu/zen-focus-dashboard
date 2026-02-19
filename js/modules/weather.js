@@ -1,3 +1,6 @@
+const CACHE_KEY = 'zenfocus_weather_cache';
+const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
 export class WeatherWidget {
     constructor(widgetElement) {
         this.widgetElement = widgetElement;
