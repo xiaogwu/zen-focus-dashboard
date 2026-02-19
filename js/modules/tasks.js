@@ -64,23 +64,64 @@ export class TaskManager {
     }
 
     render() {
-        this.listElement.innerHTML = '';
-        this.tasks.forEach(task => {
-            const li = document.createElement('li');
-            li.className = `task-item ${task.completed ? 'completed' : ''}`;
-            li.dataset.id = task.id;
-
-            const span = document.createElement('span');
-            span.textContent = task.text;
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = '×';
-            deleteBtn.dataset.id = task.id;
-
-            li.appendChild(span);
-            li.appendChild(deleteBtn);
-            this.listElement.appendChild(li);
+        const existingElements = new Map();
+        Array.from(this.listElement.children).forEach(li => {
+            if (li.dataset.id) {
+                existingElements.set(li.dataset.id, li);
+            }
         });
+
+        this.tasks.forEach((task, index) => {
+            const taskId = String(task.id);
+            let li = existingElements.get(taskId);
+
+            if (li) {
+                this.updateTaskElement(li, task);
+                existingElements.delete(taskId);
+            } else {
+                li = this.createTaskElement(task);
+            }
+
+            const currentChild = this.listElement.children[index];
+            if (currentChild !== li) {
+                if (currentChild) {
+                    this.listElement.insertBefore(li, currentChild);
+                } else {
+                    this.listElement.appendChild(li);
+                }
+            }
+        });
+
+        existingElements.forEach(li => li.remove());
+    }
+
+    createTaskElement(task) {
+        const li = document.createElement('li');
+        li.className = `task-item ${task.completed ? 'completed' : ''}`;
+        li.dataset.id = task.id;
+
+        const span = document.createElement('span');
+        span.textContent = task.text;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = '×';
+        deleteBtn.dataset.id = task.id;
+
+        li.appendChild(span);
+        li.appendChild(deleteBtn);
+        return li;
+    }
+
+    updateTaskElement(li, task) {
+        const isCompleted = li.classList.contains('completed');
+        if (task.completed !== isCompleted) {
+            li.classList.toggle('completed', task.completed);
+        }
+
+        const span = li.querySelector('span');
+        if (span && span.textContent !== task.text) {
+            span.textContent = task.text;
+        }
     }
 }
