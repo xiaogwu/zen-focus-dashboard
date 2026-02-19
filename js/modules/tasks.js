@@ -80,11 +80,11 @@ export class TaskManager {
         }
 
         const existingElements = new Map();
-        Array.from(this.listElement.children).forEach(li => {
+        for (const li of this.listElement.children) {
             if (li.dataset.id) {
                 existingElements.set(li.dataset.id, li);
             }
-        });
+        }
 
         const fragment = document.createDocumentFragment();
 
@@ -133,6 +133,8 @@ export class TaskManager {
 
         li.appendChild(span);
         li.appendChild(deleteBtn);
+        // Cache span reference for performance to avoid querySelector in render loop
+        li._taskSpan = span;
         return li;
     }
 
