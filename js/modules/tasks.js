@@ -25,6 +25,16 @@ export class TaskManager {
                 this.toggleTask(id);
             }
         });
+
+        // Keyboard navigation for tasks
+        this.listElement.addEventListener('keydown', (e) => {
+            const li = e.target.closest('li');
+            if (li && e.target.tagName === 'SPAN' && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                const id = this.getTaskId(li);
+                this.toggleTask(id);
+            }
+        });
     }
 
     getTaskId(element) {
@@ -111,10 +121,14 @@ export class TaskManager {
 
         const span = document.createElement('span');
         span.textContent = task.text;
+        span.tabIndex = 0;
+        span.setAttribute('role', 'checkbox');
+        span.setAttribute('aria-checked', task.completed);
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.textContent = '×';
+        deleteBtn.setAttribute('aria-label', `Delete task: ${task.text}`);
         deleteBtn.dataset.id = task.id;
 
         li.appendChild(span);
@@ -130,10 +144,18 @@ export class TaskManager {
             li.classList.toggle('completed', task.completed);
         }
 
-        // Use cached span if available, fallback to querySelector
-        const span = li._taskSpan || li.querySelector('span');
-        if (span && span.textContent !== task.text) {
-            span.textContent = task.text;
+        const span = li.querySelector('span');
+        if (span) {
+            if (span.getAttribute('aria-checked') !== String(task.completed)) {
+                span.setAttribute('aria-checked', task.completed);
+            }
+            if (span.textContent !== task.text) {
+                span.textContent = task.text;
+                const deleteBtn = li.querySelector('.delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.setAttribute('aria-label', `Delete task: ${task.text}`);
+                }
+            }
         }
     }
 }
