@@ -27,9 +27,15 @@ global.window.AudioContext = class {
 };
 global.window.webkitAudioContext = global.window.AudioContext;
 
-// Mock alert
+// Mock alert (deprecated in favor of notifier, but kept for safety)
 global.alert = (msg) => {
     // console.log('Alert:', msg);
+};
+
+// Mock Notifier
+let lastNotification = null;
+const mockNotifier = (message, type) => {
+    lastNotification = { message, type };
 };
 
 // Mock document.title
@@ -117,7 +123,7 @@ function runTests() {
         els.workInput.value = '25';
         els.breakInput.value = '5';
 
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, mockNotifier);
 
         assertEqual(els.display.textContent, '25:00', 'Initial display should be 25:00');
         assertEqual(timer.timeLeft, 25 * 60, 'Initial timeLeft should be 1500 seconds');
@@ -136,7 +142,7 @@ function runTests() {
         console.log('Test: Start Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, mockNotifier);
 
         timer.start();
 
@@ -161,7 +167,7 @@ function runTests() {
         console.log('Test: Pause Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, mockNotifier);
 
         timer.start();
         advanceTime(5);
@@ -187,7 +193,7 @@ function runTests() {
         console.log('Test: Reset Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, mockNotifier);
 
         timer.start();
         advanceTime(100);
@@ -211,7 +217,7 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '25';
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, mockNotifier);
 
         // Change work input
         els.workInput.value = '30';
@@ -247,7 +253,9 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '1'; // 1 minute
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+
+        lastNotification = null; // Reset notification
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, mockNotifier);
 
         // Manually set timeLeft to 2 seconds to speed up test
         timer.timeLeft = 2;
@@ -267,6 +275,11 @@ function runTests() {
         assertEqual(timer.isWorkSession, false, 'Should switch to break session');
         assertEqual(timer.timeLeft, 5 * 60, 'Should set time to break duration (5 min)');
 
+        // Check Notification
+        assert(lastNotification !== null, 'Notification should be displayed');
+        assert(lastNotification.message === 'Work session complete! Take a break.', 'Notification message incorrect');
+        assert(lastNotification.type === 'success', 'Notification type incorrect');
+
         console.log('PASS');
         passed++;
     } catch (e) {
@@ -279,7 +292,7 @@ function runTests() {
         console.log('Test: Start Timer When Already Running');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, mockNotifier);
 
         timer.start();
         const initialTimerId = timer.timerId;

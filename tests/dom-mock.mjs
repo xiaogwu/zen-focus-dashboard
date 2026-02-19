@@ -64,6 +64,13 @@ class MockHTMLElement {
             this.listeners['click'].forEach(cb => cb({ target: this }));
         }
     }
+
+    remove() {
+        if (this.parentElement) {
+            this.parentElement.children = this.parentElement.children.filter(c => c !== this);
+            this.parentElement = null;
+        }
+    }
 }
 
 global.MockHTMLElement = MockHTMLElement;
@@ -71,7 +78,8 @@ global.MockHTMLElement = MockHTMLElement;
 global.document = {
     createElement: (tag) => new MockHTMLElement(tag),
     getElementById: (id) => new MockHTMLElement('div'), // default to div
-    querySelector: (selector) => new MockHTMLElement('div')
+    querySelector: (selector) => new MockHTMLElement('div'),
+    body: new MockHTMLElement('body')
 };
 
 global.localStorage = {

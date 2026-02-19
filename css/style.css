@@ -190,3 +190,64 @@ footer {
     color: #666;
     margin-top: 1rem;
 }
+
+/* Notification Styles */
+#notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 300px;
+}
+
+.notification-toast {
+    background-color: var(--widget-bg);
+    color: var(--text-color);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideIn 0.3s ease-out;
+    border-left: 5px solid var(--primary-color);
+}
+
+.notification-toast.info {
+    border-left-color: var(--primary-color);
+}
+
+.notification-toast.success {
+    border-left-color: var(--secondary-color);
+}
+
+.notification-toast.warning {
+    border-left-color: var(--accent-color);
+}
+
+.toast-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-left: 10px;
+    color: #888;
+}
+
+.toast-close-btn:hover {
+    color: #333;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}

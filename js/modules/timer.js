@@ -1,11 +1,14 @@
+import { showNotification } from './notification.js';
+
 export class PomodoroTimer {
-    constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput) {
+    constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput, notifier = showNotification) {
         this.displayElement = displayElement;
         this.startBtn = startBtn;
         this.pauseBtn = pauseBtn;
         this.resetBtn = resetBtn;
         this.workInput = workInput;
         this.breakInput = breakInput;
+        this.notifier = notifier;
 
         this.timeLeft = 25 * 60; // Default 25 minutes
         this.timerId = null;
@@ -80,10 +83,10 @@ export class PomodoroTimer {
         this.isWorkSession = !this.isWorkSession;
         if (this.isWorkSession) {
             this.timeLeft = this.getValidTime(this.workInput) * 60;
-            setTimeout(() => alert('Break is over! Time to work.'), 10);
+            setTimeout(() => this.notifier('Break is over! Time to work.', 'info'), 10);
         } else {
             this.timeLeft = this.getValidTime(this.breakInput) * 60;
-            setTimeout(() => alert('Work session complete! Take a break.'), 10);
+            setTimeout(() => this.notifier('Work session complete! Take a break.', 'success'), 10);
         }
         this.updateDisplay();
         // Automatically start the next session? Maybe not. Let the user start.
