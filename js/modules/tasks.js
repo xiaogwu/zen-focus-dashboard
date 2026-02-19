@@ -1,6 +1,12 @@
 export class TaskManager {
     constructor(listElement, inputElement, addButtonElement) {
-        this.tasks = JSON.parse(localStorage.getItem('zenFocusTasks')) || [];
+        try {
+            this.tasks = JSON.parse(localStorage.getItem('zenFocusTasks')) || [];
+        } catch (e) {
+            console.warn('Failed to parse tasks from localStorage. Resetting data.', e);
+            this.tasks = [];
+            localStorage.setItem('zenFocusTasks', JSON.stringify([]));
+        }
         this.listElement = listElement;
         this.inputElement = inputElement;
         this.addButtonElement = addButtonElement;
@@ -32,7 +38,11 @@ export class TaskManager {
     }
 
     saveTasks() {
-        localStorage.setItem('zenFocusTasks', JSON.stringify(this.tasks));
+        try {
+            localStorage.setItem('zenFocusTasks', JSON.stringify(this.tasks));
+        } catch (e) {
+            console.warn('Failed to save tasks to localStorage:', e);
+        }
         this.render();
     }
 
