@@ -273,7 +273,8 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '1'; // 1 minute
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
+        // Pass mockNotifier to verify notification
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
 
         // Manually set timeLeft to 2 seconds to speed up test
         timer.timeLeft = 2;
