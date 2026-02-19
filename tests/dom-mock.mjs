@@ -90,5 +90,13 @@ global.sessionStorage = {
     removeItem: (key) => { delete global.sessionStorage.store[key]; }
 };
 
+global.sessionStorage = {
+    store: {},
+    getItem: (key) => global.sessionStorage.store[key] || null,
+    setItem: (key, value) => { global.sessionStorage.store[key] = value.toString(); },
+    removeItem: (key) => { delete global.sessionStorage.store[key]; },
+    clear: () => { global.sessionStorage.store = {}; }
+};
+
 // Mock window/global properties if needed
 global.window = global;
