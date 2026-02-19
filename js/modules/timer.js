@@ -43,8 +43,21 @@ export class PomodoroTimer {
         return value;
     }
 
+    initAudio() {
+        if (!this.audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                this.audioCtx = new AudioContext();
+            }
+        }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
+    }
+
     start() {
         if (!this.isRunning) {
+            this.initAudio();
             this.isRunning = true;
             this.timerId = setInterval(() => {
                 this.timeLeft--;
@@ -104,35 +117,37 @@ export class PomodoroTimer {
     }
 
     playSound() {
-        // Simple beep using AudioContext or just console.log for now if no file
-        // Using a data URI for a simple beep sound could work, but let's stick to alert for simplicity as per plan
-        // Or I can try to use a simple oscillator
         try {
-            if (!this.audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (AudioContext) {
-                    this.audioCtx = new AudioContext();
-                }
-            }
+            this.initAudio();
 
             if (this.audioCtx) {
-                // Ensure context is running (it might be suspended by the browser)
-                if (this.audioCtx.state === 'suspended') {
-                    this.audioCtx.resume();
-                }
+                const now = this.audioCtx.currentTime;
 
-                const oscillator = this.audioCtx.createOscillator();
-                const gainNode = this.audioCtx.createGain();
+                // Play a pleasant major triad arpeggio (C5, E5, G5)
+                const notes = [523.25, 659.25, 783.99];
 
-                oscillator.connect(gainNode);
-                gainNode.connect(this.audioCtx.destination);
+                notes.forEach((freq, index) => {
+                    const oscillator = this.audioCtx.createOscillator();
+                    const gainNode = this.audioCtx.createGain();
 
-                oscillator.type = 'sine';
-                oscillator.frequency.value = 880; // A5
-                gainNode.gain.value = 0.1;
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioCtx.destination);
 
-                oscillator.start();
-                setTimeout(() => oscillator.stop(), 500);
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = freq;
+
+                    // Stagger notes slightly for an arpeggio effect
+                    const startTime = now + (index * 0.1);
+                    const duration = 0.5;
+
+                    // Envelope: fast attack, slow exponential decay
+                    gainNode.gain.setValueAtTime(0, startTime);
+                    gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + duration);
+                });
             }
         } catch (e) {
             console.error('Audio play failed', e);

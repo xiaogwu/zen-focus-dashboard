@@ -7,6 +7,7 @@ import { PomodoroTimer } from '../js/modules/timer.js';
 global.window.AudioContext = class {
     constructor() {
         this.state = 'running';
+        this.currentTime = 0;
     }
     createOscillator() {
         return {
@@ -14,13 +15,18 @@ global.window.AudioContext = class {
             start: () => {},
             stop: () => {},
             type: '',
-            frequency: { value: 0 }
+            frequency: { value: 0, setValueAtTime: () => {} }
         };
     }
     createGain() {
         return {
             connect: () => {},
-            gain: { value: 0 }
+            gain: {
+                value: 0,
+                setValueAtTime: () => {},
+                exponentialRampToValueAtTime: () => {},
+                linearRampToValueAtTime: () => {}
+            }
         };
     }
     resume() {}
