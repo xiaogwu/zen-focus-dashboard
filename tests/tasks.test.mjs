@@ -261,6 +261,115 @@ function runTests() {
         failed++;
     }
 
+    // Test 7: Accessibility Attributes
+    try {
+        console.log('Test: Accessibility Attributes');
+
+        // Setup
+        global.localStorage.clear();
+        const listElement = global.document.createElement('ul');
+        const inputElement = global.document.createElement('input');
+        const addButtonElement = global.document.createElement('button');
+        const taskManager = new TaskManager(listElement, inputElement, addButtonElement);
+
+        // Add a task
+        inputElement.value = 'Accessible Task';
+        taskManager.addTask();
+
+        const taskLi = listElement.children[0];
+        const span = taskLi.querySelector('span');
+        const deleteBtn = taskLi.querySelector('.delete-btn');
+
+        // Verification
+        assert(span.getAttribute('role') === 'checkbox', 'Task text should have role="checkbox"');
+        // Check both property and attribute as mock might behave differently than real DOM depending on implementation details
+        // In our mock, we implemented setAttribute and tabIndex property separately, but creating logic sets property.
+        // Wait, creating logic: span.tabIndex = 0;
+        assert(span.tabIndex === 0, 'Task text should be focusable (tabIndex property)');
+        assert(span.getAttribute('aria-checked') === 'false', 'Task text should have aria-checked="false" initially');
+        assert(deleteBtn.getAttribute('aria-label') === 'Delete task: Accessible Task', 'Delete button should have correct aria-label');
+
+        // Toggle task
+        const task = taskManager.tasks[0];
+        taskManager.toggleTask(task.id);
+
+        // render() is called which re-creates elements in current implementation
+        // So we need to re-query elements
+        const updatedTaskLi = listElement.children[0];
+        const updatedSpan = updatedTaskLi.querySelector('span');
+
+        assert(updatedSpan.getAttribute('aria-checked') === 'true', 'Task text should have aria-checked="true" after toggle');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
+    // Test 8: Keyboard Interaction
+    try {
+        console.log('Test: Keyboard Interaction');
+
+        // Setup
+        global.localStorage.clear();
+        const listElement = global.document.createElement('ul');
+        const inputElement = global.document.createElement('input');
+        const addButtonElement = global.document.createElement('button');
+        const taskManager = new TaskManager(listElement, inputElement, addButtonElement);
+
+        // Add a task
+        inputElement.value = 'Keyboard Task';
+        taskManager.addTask();
+        let taskLi = listElement.children[0];
+        let span = taskLi.querySelector('span');
+        const task = taskManager.tasks[0];
+
+        // Simulate Keydown 'Enter' on span
+        const triggerKeydown = (key, target) => {
+            const event = {
+                target: target,
+                key: key,
+                preventDefault: () => {},
+                stopPropagation: () => {}
+            };
+            // Access listeners from the mock object
+            if (listElement.listeners['keydown']) {
+                listElement.listeners['keydown'].forEach(cb => cb(event));
+            }
+        };
+
+        // Action: Press Enter on span
+        triggerKeydown('Enter', span);
+
+        // Re-query because render() replaces elements
+        taskLi = listElement.children[0];
+        span = taskLi.querySelector('span');
+
+        // Verification
+        assert(task.completed === true, 'Task should be completed after Enter key');
+        assert(span.getAttribute('aria-checked') === 'true', 'aria-checked should be true');
+
+        // Action: Press Space on span
+        triggerKeydown(' ', span);
+
+        // Re-query
+        taskLi = listElement.children[0];
+        span = taskLi.querySelector('span');
+
+        // Verification
+        assert(task.completed === false, 'Task should be incomplete after Space key');
+        assert(span.getAttribute('aria-checked') === 'false', 'aria-checked should be false');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
     console.log(`\nTests completed. Passed: ${passed}, Failed: ${failed}`);
     if (failed > 0) process.exit(1);
 }

@@ -1,3 +1,4 @@
+
 import { showNotification } from './notification.js';
 
 export class PomodoroTimer {
@@ -97,18 +98,23 @@ export class PomodoroTimer {
         this.isWorkSession = !this.isWorkSession;
 
         let message;
+        let type;
         if (this.isWorkSession) {
             this.timeLeft = this.getValidTime(this.workInput) * 60;
             message = 'Break is over! Time to work.';
+            type = 'info';
         } else {
             this.timeLeft = this.getValidTime(this.breakInput) * 60;
             message = 'Work session complete! Take a break.';
+            type = 'success';
         }
 
         this.updateDisplay();
 
         setTimeout(() => {
-            this.notifier(message, 'success');
+            if (this.notifier) {
+                this.notifier(message, type);
+            }
             if (this.autoStartCheckbox && this.autoStartCheckbox.checked) {
                 this.start();
             }

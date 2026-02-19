@@ -27,6 +27,21 @@ class MockHTMLElement {
         // Dialog specific properties
         this.open = false;
         this.returnValue = '';
+
+        this.attributes = {};
+        this.tabIndex = -1;
+    }
+
+    setAttribute(name, value) {
+        this.attributes[name] = String(value);
+    }
+
+    getAttribute(name) {
+        return this.attributes[name] || null;
+    }
+
+    hasAttribute(name) {
+        return Object.prototype.hasOwnProperty.call(this.attributes, name);
     }
 
     showModal() {
@@ -114,6 +129,10 @@ class MockHTMLElement {
     }
 
     querySelector(selector) {
+        if (selector.startsWith('.')) {
+            const className = selector.substring(1);
+            return this.children.find(c => c.classList.contains(className)) || null;
+        }
         // Very basic selector support: tag name only
         return this.children.find(c => c.tagName.toLowerCase() === selector.toLowerCase()) || null;
     }
