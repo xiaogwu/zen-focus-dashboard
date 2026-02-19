@@ -74,6 +74,19 @@ async function runTests() {
     let passed = 0;
     let failed = 0;
 
+    // Helper to mock console.warn
+    let warnCalls = [];
+    const originalWarn = console.warn;
+    function mockConsoleWarn() {
+        warnCalls = [];
+        console.warn = (...args) => {
+            warnCalls.push(args);
+        };
+    }
+    function restoreConsoleWarn() {
+        console.warn = originalWarn;
+    }
+
     // Helper to reset state
     function setup() {
         global.localStorage.clear();
@@ -83,6 +96,7 @@ async function runTests() {
         global.document.body.style = {};
         fetchCalls = [];
         restoreDate();
+        restoreConsoleWarn();
     }
 
     // Test 1: Initialization
