@@ -274,24 +274,32 @@ function runTests() {
         failed++;
     }
 
-    // Test 7: Verify ClearInterval on Pause
+    // Test 7: Start Timer When Already Running
     try {
-        console.log('Test: Verify ClearInterval on Pause');
+        console.log('Test: Start Timer When Already Running');
         const els = createElements();
+        els.workInput.value = '25';
         const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
 
         timer.start();
-        assert(intervals[timer.timerId] !== undefined, 'Interval should be active after start');
+        const initialTimerId = timer.timerId;
 
-        timer.pause();
-        assert(intervals[timer.timerId] === undefined, 'Interval should be cleared after pause');
-        assertEqual(timer.isRunning, false, 'isRunning should be false after pause');
+        // Try to start again
+        timer.start();
 
-        // Check idempotency
-        const timerIdBefore = timer.timerId;
-        timer.pause();
-        assertEqual(timer.timerId, timerIdBefore, 'timerId should not change on repeated pause');
-        assert(intervals[timer.timerId] === undefined, 'Interval should remain cleared');
+        if (timer.timerId !== initialTimerId) {
+             throw new Error('Timer ID changed! Multiple intervals might be running.');
+        }
+
+        // Verify time decreases correctly (not double speed)
+        const timeBefore = timer.timeLeft;
+        advanceTime(1);
+        const timeAfter = timer.timeLeft;
+
+        // If two intervals running, timeLeft would decrease by 2
+        if (timeBefore - timeAfter !== 1) {
+             throw new Error(`Time decreased by ${timeBefore - timeAfter} seconds instead of 1. Likely duplicate intervals.`);
+        }
 
         console.log('PASS');
         passed++;
