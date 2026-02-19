@@ -7,6 +7,7 @@ import { PomodoroTimer } from '../js/modules/timer.js';
 global.window.AudioContext = class {
     constructor() {
         this.state = 'running';
+        this.currentTime = 0;
     }
     createOscillator() {
         return {
@@ -14,13 +15,18 @@ global.window.AudioContext = class {
             start: () => {},
             stop: () => {},
             type: '',
-            frequency: { value: 0 }
+            frequency: { value: 0, setValueAtTime: () => {} }
         };
     }
     createGain() {
         return {
             connect: () => {},
-            gain: { value: 0 }
+            gain: {
+                value: 0,
+                setValueAtTime: () => {},
+                exponentialRampToValueAtTime: () => {},
+                linearRampToValueAtTime: () => {}
+            }
         };
     }
     resume() {}
@@ -300,6 +306,44 @@ function runTests() {
         if (timeBefore - timeAfter !== 1) {
              throw new Error(`Time decreased by ${timeBefore - timeAfter} seconds instead of 1. Likely duplicate intervals.`);
         }
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test: Detailed Reset Behavior
+    try {
+        console.log('Test: Detailed Reset Behavior');
+        const els = createElements();
+        els.workInput.value = '25';
+        els.breakInput.value = '5';
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+
+        // Scenario: Reset from Break Session
+        timer.isWorkSession = false; // Force break session state
+        timer.start(); // Start it running
+
+        // Spy on pause
+        let pauseCalled = false;
+        const originalPause = timer.pause;
+        timer.pause = function() {
+            pauseCalled = true;
+            originalPause.call(this);
+        };
+
+        // Modify work input to ensure it picks up new value
+        els.workInput.value = '45';
+
+        timer.reset();
+
+        assertEqual(pauseCalled, true, 'reset() should call pause()');
+        assertEqual(timer.isRunning, false, 'Timer should be stopped');
+        assertEqual(timer.isWorkSession, true, 'Should switch to work session');
+        assertEqual(timer.timeLeft, 45 * 60, 'Should use current work input value');
+        assertEqual(els.display.textContent, '45:00', 'Display should update');
 
         console.log('PASS');
         passed++;
