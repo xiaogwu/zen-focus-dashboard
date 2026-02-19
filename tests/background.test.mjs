@@ -72,6 +72,19 @@ async function runTests() {
     let passed = 0;
     let failed = 0;
 
+    // Helper to mock console.warn
+    let warnCalls = [];
+    const originalWarn = console.warn;
+    function mockConsoleWarn() {
+        warnCalls = [];
+        console.warn = (...args) => {
+            warnCalls.push(args);
+        };
+    }
+    function restoreConsoleWarn() {
+        console.warn = originalWarn;
+    }
+
     // Helper to reset state
     function setup() {
         global.localStorage.clear();
@@ -81,6 +94,7 @@ async function runTests() {
         global.document.body.style = {};
         fetchCalls = [];
         restoreDate();
+        restoreConsoleWarn();
     }
 
     // Test 1: Initialization
@@ -263,6 +277,79 @@ async function runTests() {
 
         assert(fetchCalls.length === 1, 'Should have attempted fetch');
         assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages[0].url), 'Should fallback on error');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test 7: Corrupted Cache Handling
+    try {
+        console.log('Test: Corrupted Cache Handling');
+        setup();
+        mockConsoleWarn();
+
+        // Corrupt cache
+        global.localStorage.setItem('zenfocus_bg_cache', 'invalid-json');
+
+        const bg = new BackgroundManager();
+        await bg.setBackground();
+
+        assert(warnCalls.length > 0, 'Should warn about corrupted cache');
+        assert(warnCalls[0][0].includes('Failed to parse cached background'), 'Warning message should match');
+
+        // Should fallback (since no API key set in this test case)
+        assert(global.document.body.style.backgroundImage && global.document.body.style.backgroundImage.includes('unsplash'), 'Should apply fallback image');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test 8: Security Validation
+    try {
+        console.log('Test: Security Validation');
+        setup();
+        mockConsoleWarn();
+        global.sessionStorage.setItem('unsplashApiKey', 'test-key');
+
+        const bg = new BackgroundManager();
+
+        // Mock fetch returning malicious URL
+        mockFetch({
+            urls: { regular: 'http://evil.com/image.jpg' },
+            user: { name: 'Evil', links: { html: '' } }
+        });
+
+        await bg.setBackground();
+
+        assert(warnCalls.length > 0, 'Should warn about blocked image');
+        assert(warnCalls[0][0].includes('Blocked attempt'), 'Warning message should match');
+        assert(!global.document.body.style.backgroundImage, 'Should NOT apply malicious image');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test 9: Missing API Key - No Fetch
+    try {
+        console.log('Test: Missing API Key - No Fetch');
+        setup();
+        // Ensure no API key
+        global.sessionStorage.removeItem('unsplashApiKey');
+
+        const bg = new BackgroundManager();
+        await bg.setBackground();
+
+        assert(fetchCalls.length === 0, 'Should NOT attempt to fetch without API key');
+        assert(global.document.body.style.backgroundImage.includes('unsplash'), 'Should fall back to default images');
 
         console.log('PASS');
         passed++;
