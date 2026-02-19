@@ -31,15 +31,33 @@ function runTests() {
         const task = taskManager.tasks[0];
         const taskId = task.id;
 
-        // Action
+        // Action: Toggle to completed
         taskManager.toggleTask(taskId);
 
         // Verification
         assert(task.completed === true, 'Task should be completed after toggle');
 
-        // Toggle back
+        // Verify localStorage update
+        const storedTasks = JSON.parse(global.localStorage.getItem('zenFocusTasks'));
+        assert(storedTasks[0].completed === true, 'Task in localStorage should be completed');
+
+        // Verify DOM update
+        const taskLi = listElement.children[0];
+        assert(taskLi.classList.contains('completed'), 'Task element should have "completed" class');
+
+        // Action: Toggle back to incomplete
         taskManager.toggleTask(taskId);
+
+        // Verification
         assert(task.completed === false, 'Task should be incomplete after second toggle');
+
+        // Verify localStorage update
+        const storedTasks2 = JSON.parse(global.localStorage.getItem('zenFocusTasks'));
+        assert(storedTasks2[0].completed === false, 'Task in localStorage should be incomplete');
+
+        // Verify DOM update
+        const taskLi2 = listElement.children[0];
+        assert(!taskLi2.classList.contains('completed'), 'Task element should NOT have "completed" class');
 
         console.log('PASS');
         passed++;
