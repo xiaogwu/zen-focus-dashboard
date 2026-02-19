@@ -130,9 +130,9 @@ async function runTests() {
         failed++;
     }
 
-    // Test 4: Fetch without API Key (Mock Data)
+    // Test 4: Fetch without API Key (Prompt to set key)
     try {
-        console.log('Test: fetchWeather uses mock data when API key is missing');
+        console.log('Test: fetchWeather prompts to set API key when missing');
 
         global.sessionStorage.clear();
         global.localStorage.clear(); // Ensure clean state
@@ -142,10 +142,10 @@ async function runTests() {
 
         await widget.fetchWeather(10, 20);
 
-        assert(widget.weatherTemp.textContent === '22°C',
-               `Expected '22°C', got '${widget.weatherTemp.textContent}'`);
-        assert(widget.weatherDesc.textContent === 'Sunny (Mock)',
-               `Expected 'Sunny (Mock)', got '${widget.weatherDesc.textContent}'`);
+        assert(widget.weatherTemp.textContent === '--°C',
+               `Expected '--°C', got '${widget.weatherTemp.textContent}'`);
+        assert(widget.weatherDesc.textContent === 'Click to set API Key',
+               `Expected 'Click to set API Key', got '${widget.weatherDesc.textContent}'`);
 
         console.log('PASS');
         passed++;
