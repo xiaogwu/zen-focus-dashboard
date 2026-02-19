@@ -71,6 +71,13 @@ global.setTimeout = (cb, ms) => {
     return id;
 };
 
+function resetMocks() {
+    intervals = {};
+    timeouts = {};
+    timerIdCounter = 0;
+    global._docTitle = '';
+}
+
 // Helper to advance time
 function advanceTime(seconds) {
     const elapsedMs = seconds * 1000;
@@ -118,6 +125,7 @@ function runTests() {
 
     // Test 1: Initialization
     try {
+        resetMocks();
         console.log('Test: Initialization');
         const els = createElements();
         els.workInput.value = '25';
@@ -139,6 +147,7 @@ function runTests() {
 
     // Test 2: Start Timer
     try {
+        resetMocks();
         console.log('Test: Start Timer');
         const els = createElements();
         els.workInput.value = '25';
@@ -164,6 +173,7 @@ function runTests() {
 
     // Test 3: Pause Timer
     try {
+        resetMocks();
         console.log('Test: Pause Timer');
         const els = createElements();
         els.workInput.value = '25';
@@ -190,6 +200,7 @@ function runTests() {
 
     // Test 4: Reset Timer
     try {
+        resetMocks();
         console.log('Test: Reset Timer');
         const els = createElements();
         els.workInput.value = '25';
@@ -213,6 +224,7 @@ function runTests() {
 
     // Test 5: Change Input Duration
     try {
+        resetMocks();
         console.log('Test: Change Input Duration');
         const els = createElements();
         els.workInput.value = '25';
@@ -249,6 +261,7 @@ function runTests() {
 
     // Test 6: Session Completion (Work -> Break)
     try {
+        resetMocks();
         console.log('Test: Session Completion (Work -> Break)');
         const els = createElements();
         els.workInput.value = '1'; // 1 minute
@@ -282,6 +295,7 @@ function runTests() {
 
     // Test 7: Start Timer When Already Running
     try {
+        resetMocks();
         console.log('Test: Start Timer When Already Running');
         const els = createElements();
         els.workInput.value = '25';
