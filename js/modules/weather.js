@@ -17,32 +17,47 @@ export class WeatherWidget {
         this.weatherIcon = widgetElement.querySelector('.weather-icon');
         this.weatherTemp = widgetElement.querySelector('.weather-temp');
         this.weatherDesc = widgetElement.querySelector('.weather-desc');
+        this.settingsBtn = widgetElement.querySelector('#weather-settings-btn');
 
-        // Allow user to set API key via UI interaction
-        this.widgetElement.addEventListener('click', () => this.handleWidgetClick());
+        this.settingsDialog = document.getElementById('weather-settings-dialog');
+        this.apiKeyInput = document.getElementById('weather-api-key');
+
+        if (this.settingsBtn) {
+            this.settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openSettings();
+            });
+        }
+
+        if (this.settingsDialog) {
+            this.settingsDialog.addEventListener('close', () => this.handleDialogClose());
+        }
+
+        // Allow user to set API key via UI interaction (click on widget if key is missing)
+        this.widgetElement.addEventListener('click', () => {
+            if (!this.apiKey) {
+                this.openSettings();
+            }
+        });
     }
 
-    handleWidgetClick() {
-        if (!this.apiKey) {
-            const key = prompt('Please enter your OpenWeatherMap API Key:');
-            if (key) {
-                this.apiKey = key.trim();
+    openSettings() {
+        if (this.settingsDialog && this.apiKeyInput) {
+            this.apiKeyInput.value = this.apiKey;
+            this.settingsDialog.showModal();
+        }
+    }
+
+    handleDialogClose() {
+        if (this.settingsDialog.returnValue === 'save') {
+            const key = this.apiKeyInput.value.trim();
+            this.apiKey = key;
+            if (this.apiKey) {
                 sessionStorage.setItem('openWeatherMapApiKey', this.apiKey);
-                this.init();
+            } else {
+                sessionStorage.removeItem('openWeatherMapApiKey');
             }
-        } else {
-            if (confirm('Do you want to update your OpenWeatherMap API Key?')) {
-                const key = prompt('Enter new API Key (leave empty to clear):');
-                if (key !== null) {
-                    this.apiKey = key.trim();
-                    if (this.apiKey) {
-                        sessionStorage.setItem('openWeatherMapApiKey', this.apiKey);
-                    } else {
-                        sessionStorage.removeItem('openWeatherMapApiKey');
-                    }
-                    this.init();
-                }
-            }
+            this.init();
         }
     }
 
