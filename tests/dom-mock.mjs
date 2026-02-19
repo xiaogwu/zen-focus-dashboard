@@ -23,6 +23,21 @@ class MockHTMLElement {
         this.textContent = '';
         this.value = '';
         this.parentElement = null;
+
+        // Dialog specific properties
+        this.open = false;
+        this.returnValue = '';
+    }
+
+    showModal() {
+        this.open = true;
+    }
+
+    close(returnValue) {
+        this.open = false;
+        if (returnValue !== undefined) {
+            this.returnValue = returnValue;
+        }
     }
 
     set className(val) {
@@ -95,7 +110,11 @@ class MockHTMLElement {
     // Helper to simulate event
     click() {
         if (this.listeners['click']) {
-            this.listeners['click'].forEach(cb => cb({ target: this }));
+            this.listeners['click'].forEach(cb => cb({
+                target: this,
+                stopPropagation: () => {},
+                preventDefault: () => {}
+            }));
         }
     }
 

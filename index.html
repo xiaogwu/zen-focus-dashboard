@@ -15,8 +15,21 @@
                 <div class="weather-icon"></div>
                 <div class="weather-temp">Loading...</div>
                 <div class="weather-desc"></div>
+                <button id="weather-settings-btn" aria-label="Settings">⚙️</button>
             </div>
         </header>
+
+        <dialog id="weather-settings-dialog">
+            <form method="dialog">
+                <h3>Weather Settings</h3>
+                <label for="weather-api-key">OpenWeatherMap API Key:</label>
+                <input type="text" id="weather-api-key" placeholder="Enter API Key">
+                <div class="dialog-buttons">
+                    <button value="cancel">Cancel</button>
+                    <button value="save" id="save-weather-key">Save</button>
+                </div>
+            </form>
+        </dialog>
 
         <main>
             <section id="timer-section" class="widget">
