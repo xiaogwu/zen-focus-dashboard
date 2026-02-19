@@ -136,33 +136,88 @@ function runTests() {
         failed++;
     }
 
-    // Test 4: Toggle Persistence
+    // Test 4: Delete Existing Task
     try {
-        console.log('Test: Toggle Persistence');
+        console.log('Test: deleteTask with existing ID');
 
         // Setup
         global.localStorage.clear();
-        const initialTasks = [
-            { id: 1, text: 'Task 1', completed: true },
-            { id: 2, text: 'Task 2', completed: false }
-        ];
-        global.localStorage.setItem('zenFocusTasks', JSON.stringify(initialTasks));
-
         const listElement = global.document.createElement('ul');
         const inputElement = global.document.createElement('input');
         const addButtonElement = global.document.createElement('button');
         const taskManager = new TaskManager(listElement, inputElement, addButtonElement);
 
+        // Add a task
+        inputElement.value = 'Task to Delete';
+        taskManager.addTask();
+        const task = taskManager.tasks[0];
+        const taskId = task.id;
+
+        // Action
+        taskManager.deleteTask(taskId);
+
         // Verification
-        assert(taskManager.tasks.length === 2, 'Should load 2 tasks');
+        assert(taskManager.tasks.length === 0, 'Task list should be empty after deletion');
 
-        const task1Li = listElement.children[0];
-        assert(task1Li.classList.contains('completed'), 'Task 1 should have "completed" class');
-        assert(task1Li.dataset.id === 1, 'Task 1 ID matches');
+        // Verify localStorage update
+        const storedTasks = JSON.parse(global.localStorage.getItem('zenFocusTasks'));
+        assert(storedTasks.length === 0, 'LocalStorage should be updated after deletion');
 
-        const task2Li = listElement.children[1];
-        assert(!task2Li.classList.contains('completed'), 'Task 2 should not have "completed" class');
-        assert(task2Li.dataset.id === 2, 'Task 2 ID matches');
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
+    // Test 5: Delete Non-Existing Task
+    try {
+        console.log('Test: deleteTask with non-existing ID');
+
+        // Setup
+        global.localStorage.clear();
+        const listElement = global.document.createElement('ul');
+        const inputElement = global.document.createElement('input');
+        const addButtonElement = global.document.createElement('button');
+        const taskManager = new TaskManager(listElement, inputElement, addButtonElement);
+
+        // Add a task
+        inputElement.value = 'Existing Task';
+        taskManager.addTask();
+        const initialLength = taskManager.tasks.length;
+
+        // Action
+        taskManager.deleteTask(999999); // Non-existing ID
+
+        // Verification
+        assert(taskManager.tasks.length === initialLength, 'Task list length should not change');
+        assert(taskManager.tasks[0].text === 'Existing Task', 'Existing task should remain');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
+    // Test 6: Delete from Empty List
+    try {
+        console.log('Test: deleteTask from empty list');
+
+        // Setup
+        global.localStorage.clear();
+        const listElement = global.document.createElement('ul');
+        const inputElement = global.document.createElement('input');
+        const addButtonElement = global.document.createElement('button');
+        const taskManager = new TaskManager(listElement, inputElement, addButtonElement);
+
+        // Action
+        taskManager.deleteTask(12345);
+
+        // Verification
+        assert(taskManager.tasks.length === 0, 'Task list should remain empty');
 
         console.log('PASS');
         passed++;

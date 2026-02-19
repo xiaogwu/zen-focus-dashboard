@@ -274,6 +274,40 @@ function runTests() {
         failed++;
     }
 
+    // Test 7: Start Timer When Already Running
+    try {
+        console.log('Test: Start Timer When Already Running');
+        const els = createElements();
+        els.workInput.value = '25';
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+
+        timer.start();
+        const initialTimerId = timer.timerId;
+
+        // Try to start again
+        timer.start();
+
+        if (timer.timerId !== initialTimerId) {
+             throw new Error('Timer ID changed! Multiple intervals might be running.');
+        }
+
+        // Verify time decreases correctly (not double speed)
+        const timeBefore = timer.timeLeft;
+        advanceTime(1);
+        const timeAfter = timer.timeLeft;
+
+        // If two intervals running, timeLeft would decrease by 2
+        if (timeBefore - timeAfter !== 1) {
+             throw new Error(`Time decreased by ${timeBefore - timeAfter} seconds instead of 1. Likely duplicate intervals.`);
+        }
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
     console.log(`\nTests completed. Passed: ${passed}, Failed: ${failed}`);
     if (failed > 0) process.exit(1);
 }
