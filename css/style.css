@@ -190,3 +190,8 @@ footer {
     color: #666;
     margin-top: 1rem;
 }
+
+.timer-settings input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+}
