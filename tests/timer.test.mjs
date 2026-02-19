@@ -119,7 +119,8 @@ function runTests() {
             pauseBtn: global.document.createElement('button'),
             resetBtn: global.document.createElement('button'),
             workInput: global.document.createElement('input'),
-            breakInput: global.document.createElement('input')
+            breakInput: global.document.createElement('input'),
+            autoStartCheckbox: global.document.createElement('input')
         };
     }
 
@@ -131,7 +132,7 @@ function runTests() {
         els.workInput.value = '25';
         els.breakInput.value = '5';
 
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
 
         assertEqual(els.display.textContent, '25:00', 'Initial display should be 25:00');
         assertEqual(timer.timeLeft, 25 * 60, 'Initial timeLeft should be 1500 seconds');
@@ -151,7 +152,7 @@ function runTests() {
         console.log('Test: Start Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
 
         timer.start();
 
@@ -177,7 +178,7 @@ function runTests() {
         console.log('Test: Pause Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
 
         timer.start();
         advanceTime(5);
@@ -204,7 +205,7 @@ function runTests() {
         console.log('Test: Reset Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
 
         timer.start();
         advanceTime(100);
@@ -229,7 +230,7 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '25';
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
 
         // Change work input
         els.workInput.value = '30';
@@ -266,7 +267,7 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '1'; // 1 minute
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
 
         // Manually set timeLeft to 2 seconds to speed up test
         timer.timeLeft = 2;
@@ -299,7 +300,7 @@ function runTests() {
         console.log('Test: Start Timer When Already Running');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
 
         timer.start();
         const initialTimerId = timer.timerId;

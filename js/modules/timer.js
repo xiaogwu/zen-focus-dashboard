@@ -1,11 +1,12 @@
 export class PomodoroTimer {
-    constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput) {
+    constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput, autoStartCheckbox) {
         this.displayElement = displayElement;
         this.startBtn = startBtn;
         this.pauseBtn = pauseBtn;
         this.resetBtn = resetBtn;
         this.workInput = workInput;
         this.breakInput = breakInput;
+        this.autoStartCheckbox = autoStartCheckbox;
 
         this.timeLeft = 25 * 60; // Default 25 minutes
         this.timerId = null;
@@ -91,15 +92,24 @@ export class PomodoroTimer {
 
         // Switch session
         this.isWorkSession = !this.isWorkSession;
+
+        let message;
         if (this.isWorkSession) {
             this.timeLeft = this.getValidTime(this.workInput) * 60;
-            setTimeout(() => alert('Break is over! Time to work.'), 10);
+            message = 'Break is over! Time to work.';
         } else {
             this.timeLeft = this.getValidTime(this.breakInput) * 60;
-            setTimeout(() => alert('Work session complete! Take a break.'), 10);
+            message = 'Work session complete! Take a break.';
         }
+
         this.updateDisplay();
-        // Automatically start the next session? Maybe not. Let the user start.
+
+        setTimeout(() => {
+            alert(message);
+            if (this.autoStartCheckbox && this.autoStartCheckbox.checked) {
+                this.start();
+            }
+        }, 10);
     }
 
     updateDisplay() {
