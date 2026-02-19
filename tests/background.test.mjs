@@ -144,15 +144,15 @@ async function runTests() {
 
         mockDate(9);
         await bg.setBackground();
-        assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages[0].url), 'Morning fallback incorrect');
+        assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages.morning[0].url), 'Morning fallback incorrect');
 
         mockDate(14);
         await bg.setBackground();
-        assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages[1].url), 'Afternoon fallback incorrect');
+        assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages.afternoon[0].url), 'Afternoon fallback incorrect');
 
         mockDate(19);
         await bg.setBackground();
-        assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages[2].url), 'Evening fallback incorrect');
+        assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages.evening[0].url), 'Evening fallback incorrect');
 
         console.log('PASS');
         passed++;
@@ -278,7 +278,7 @@ async function runTests() {
         await bg.setBackground();
 
         assert(fetchCalls.length === 1, 'Should have attempted fetch');
-        assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages[0].url), 'Should fallback on error');
+        assert(global.document.body.style.backgroundImage.includes(bg.fallbackImages.morning[0].url), 'Should fallback on error');
 
         console.log('PASS');
         passed++;
@@ -307,6 +307,57 @@ async function runTests() {
         }
     } catch (e) {
         console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test 8: Rotation Logic
+    try {
+        console.log('Test: Rotation Logic');
+        setup();
+        const bg = new BackgroundManager();
+
+        // Inject a second image into morning for testing rotation
+        bg.fallbackImages.morning.push({
+            url: 'https://images.unsplash.com/photo-morning-2',
+            author: 'Morning 2',
+            link: ''
+        });
+
+        // Mock Date to Day 1 (Jan 1st) -> index 1 % 2 = 1
+
+        const RealDate = global.Date;
+
+        // Helper to run with specific date
+        async function checkRotation(year, month, day, expectedUrl) {
+             const specificDate = new RealDate(year, month, day, 10, 0, 0); // 10 AM morning
+
+             // Override global Date constructor to return specificDate
+             global.Date = class extends RealDate {
+                constructor(...args) {
+                    if (args.length === 0) return specificDate;
+                    return new RealDate(...args);
+                }
+                getHours() { return specificDate.getHours(); }
+             };
+
+             await bg.setBackground();
+             assert(global.document.body.style.backgroundImage.includes(expectedUrl), `Failed for date ${year}-${month+1}-${day}. Got: ${global.document.body.style.backgroundImage}`);
+        }
+
+        // Jan 1st -> Day 1. 1 % 2 = 1. Expect Image 1 (the one we added)
+        // Jan 2nd -> Day 2. 2 % 2 = 0. Expect Image 0 (original)
+
+        await checkRotation(2023, 0, 1, 'https://images.unsplash.com/photo-morning-2');
+        await checkRotation(2023, 0, 2, bg.fallbackImages.morning[0].url);
+
+        // Restore Date mock
+        global.Date = RealDate;
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
         failed++;
     }
 
