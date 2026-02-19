@@ -1,23 +1,29 @@
 export class BackgroundManager {
     constructor() {
         this.apiKey = sessionStorage.getItem('unsplashApiKey') || '';
-        this.fallbackImages = [
-            {
-                url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
-                author: 'V2osk',
-                link: 'https://unsplash.com/@v2osk'
-            },
-            {
-                url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
-                author: 'Lukasz Szmigiel',
-                link: 'https://unsplash.com/@szmigiel'
-            },
-            {
-                url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
-                author: 'Patrick Hendry',
-                link: 'https://unsplash.com/@worldsbetweenlines'
-            }
-        ];
+        this.fallbackImages = {
+            morning: [
+                {
+                    url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
+                    author: 'V2osk',
+                    link: 'https://unsplash.com/@v2osk'
+                }
+            ],
+            afternoon: [
+                {
+                    url: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
+                    author: 'Lukasz Szmigiel',
+                    link: 'https://unsplash.com/@szmigiel'
+                }
+            ],
+            evening: [
+                {
+                    url: 'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',
+                    author: 'Patrick Hendry',
+                    link: 'https://unsplash.com/@worldsbetweenlines'
+                }
+            ]
+        };
     }
 
     async setBackground() {
@@ -56,11 +62,14 @@ export class BackgroundManager {
         }
 
         if (!imageData) {
-            // Use fallback based on time of day
-            let index = 0;
-            if (timeOfDay === 'afternoon') index = 1;
-            else if (timeOfDay === 'evening') index = 2;
-            imageData = this.fallbackImages[index];
+            // Use fallback based on time of day with daily rotation
+            const images = this.fallbackImages[timeOfDay] || this.fallbackImages.morning;
+
+            if (images && images.length > 0) {
+                const dayOfYear = this.getDayOfYear();
+                const index = dayOfYear % images.length;
+                imageData = images[index];
+            }
         }
 
         this.applyBackground(imageData);
@@ -71,6 +80,14 @@ export class BackgroundManager {
         if (hour < 12) return 'morning';
         if (hour < 18) return 'afternoon';
         return 'evening';
+    }
+
+    getDayOfYear() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        return Math.floor(diff / oneDay);
     }
 
     async fetchUnsplashImage(query) {
