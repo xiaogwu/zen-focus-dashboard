@@ -137,6 +137,35 @@ async function runTests() {
         failed++;
     }
 
+    // Test 4: Fetch without API Key (Mock Data)
+    try {
+        console.log('Test: fetchWeather uses mock data when API key is missing');
+
+        // Setup
+        global.localStorage.clear();
+
+        const widgetElement = createMockWidgetElement();
+        const widget = new WeatherWidget(widgetElement);
+
+        // Action
+        await widget.fetchWeather(10, 20);
+
+        // Verification
+        assert(widget.weatherTemp.textContent === '22°C',
+               `Expected '22°C', got '${widget.weatherTemp.textContent}'`);
+        assert(widget.weatherDesc.textContent === 'Sunny (Mock)',
+               `Expected 'Sunny (Mock)', got '${widget.weatherDesc.textContent}'`);
+        assert(widget.weatherIcon.style.backgroundImage.includes('01d.png'),
+               `Expected icon URL to contain '01d.png', got '${widget.weatherIcon.style.backgroundImage}'`);
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
     console.log(`\nTests completed. Passed: ${passed}, Failed: ${failed}`);
     if (failed > 0) process.exit(1);
 }
