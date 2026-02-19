@@ -78,7 +78,16 @@ global.localStorage = {
     store: {},
     getItem: (key) => global.localStorage.store[key] || null,
     setItem: (key, value) => { global.localStorage.store[key] = value.toString(); },
-    clear: () => { global.localStorage.store = {}; }
+    clear: () => { global.localStorage.store = {}; },
+    removeItem: (key) => { delete global.localStorage.store[key]; }
+};
+
+global.sessionStorage = {
+    store: {},
+    getItem: (key) => global.sessionStorage.store[key] || null,
+    setItem: (key, value) => { global.sessionStorage.store[key] = value.toString(); },
+    clear: () => { global.sessionStorage.store = {}; },
+    removeItem: (key) => { delete global.sessionStorage.store[key]; }
 };
 
 // Mock window/global properties if needed

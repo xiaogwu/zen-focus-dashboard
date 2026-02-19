@@ -4,10 +4,46 @@ const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 export class WeatherWidget {
     constructor(widgetElement) {
         this.widgetElement = widgetElement;
-        this.apiKey = localStorage.getItem('openWeatherMapApiKey') || '';
+
+        // Security Fix: Move API key from localStorage to sessionStorage if present
+        // This prevents persistent storage of sensitive keys while maintaining session usability
+        const legacyKey = localStorage.getItem('openWeatherMapApiKey');
+        if (legacyKey) {
+            sessionStorage.setItem('openWeatherMapApiKey', legacyKey);
+            localStorage.removeItem('openWeatherMapApiKey');
+        }
+
+        this.apiKey = sessionStorage.getItem('openWeatherMapApiKey') || '';
         this.weatherIcon = widgetElement.querySelector('.weather-icon');
         this.weatherTemp = widgetElement.querySelector('.weather-temp');
         this.weatherDesc = widgetElement.querySelector('.weather-desc');
+
+        // Allow user to set API key via UI interaction
+        this.widgetElement.addEventListener('click', () => this.handleWidgetClick());
+    }
+
+    handleWidgetClick() {
+        if (!this.apiKey) {
+            const key = prompt('Please enter your OpenWeatherMap API Key:');
+            if (key) {
+                this.apiKey = key.trim();
+                sessionStorage.setItem('openWeatherMapApiKey', this.apiKey);
+                this.init();
+            }
+        } else {
+            if (confirm('Do you want to update your OpenWeatherMap API Key?')) {
+                const key = prompt('Enter new API Key (leave empty to clear):');
+                if (key !== null) {
+                    this.apiKey = key.trim();
+                    if (this.apiKey) {
+                        sessionStorage.setItem('openWeatherMapApiKey', this.apiKey);
+                    } else {
+                        sessionStorage.removeItem('openWeatherMapApiKey');
+                    }
+                    this.init();
+                }
+            }
+        }
     }
 
     async init() {
