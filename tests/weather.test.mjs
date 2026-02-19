@@ -245,6 +245,143 @@ async function runTests() {
         failed++;
     }
 
+    // Test 8: Init handles missing geolocation
+    {
+        const originalNavigator = global.navigator;
+        try {
+            console.log('Test: init handles missing geolocation');
+
+            // Mock navigator with no geolocation
+            Object.defineProperty(global, 'navigator', {
+                value: {},
+                writable: true,
+                configurable: true
+            });
+
+            const widgetElement = createMockWidgetElement();
+            const widget = new WeatherWidget(widgetElement);
+
+            let errorMsg = null;
+            widget.showError = (msg) => { errorMsg = msg; };
+
+            await widget.init();
+
+            assert(errorMsg === 'Geolocation not supported', 'Should show error when geolocation is missing');
+
+            console.log('PASS');
+            passed++;
+        } catch (e) {
+            console.error('FAIL:', e.message);
+            console.error(e.stack);
+            failed++;
+        } finally {
+            if (originalNavigator) {
+                Object.defineProperty(global, 'navigator', {
+                    value: originalNavigator,
+                    writable: true,
+                    configurable: true
+                });
+            }
+        }
+    }
+
+    // Test 9: Init handles geolocation success
+    {
+        const originalNavigator = global.navigator;
+        try {
+            console.log('Test: init handles geolocation success');
+
+            // Mock navigator with success callback
+            Object.defineProperty(global, 'navigator', {
+                value: {
+                    geolocation: {
+                        getCurrentPosition: (success, error) => {
+                            success({ coords: { latitude: 10, longitude: 20 } });
+                        }
+                    }
+                },
+                writable: true,
+                configurable: true
+            });
+
+            const widgetElement = createMockWidgetElement();
+            const widget = new WeatherWidget(widgetElement);
+
+            let fetchedLat = null;
+            let fetchedLon = null;
+            widget.fetchWeather = (lat, lon) => {
+                fetchedLat = lat;
+                fetchedLon = lon;
+            };
+
+            await widget.init();
+
+            assert(fetchedLat === 10, 'Should fetch weather with correct latitude');
+            assert(fetchedLon === 20, 'Should fetch weather with correct longitude');
+
+            console.log('PASS');
+            passed++;
+        } catch (e) {
+            console.error('FAIL:', e.message);
+            console.error(e.stack);
+            failed++;
+        } finally {
+            if (originalNavigator) {
+                Object.defineProperty(global, 'navigator', {
+                    value: originalNavigator,
+                    writable: true,
+                    configurable: true
+                });
+            }
+        }
+    }
+
+    // Test 10: Init handles geolocation error
+    {
+        const originalNavigator = global.navigator;
+        try {
+            console.log('Test: init handles geolocation error');
+
+            const mockError = new Error('User denied geolocation');
+            Object.defineProperty(global, 'navigator', {
+                value: {
+                    geolocation: {
+                        getCurrentPosition: (success, error) => {
+                            error(mockError);
+                        }
+                    }
+                },
+                writable: true,
+                configurable: true
+            });
+
+            const widgetElement = createMockWidgetElement();
+            const widget = new WeatherWidget(widgetElement);
+
+            let handledError = null;
+            widget.handleGeoError = (err) => { handledError = err; };
+
+            await widget.init();
+
+            assert(handledError === mockError, 'Should handle geolocation error');
+
+            console.log('PASS');
+            passed++;
+        } catch (e) {
+            console.error('FAIL:', e.message);
+            console.error(e.stack);
+            failed++;
+        } finally {
+            if (originalNavigator) {
+                Object.defineProperty(global, 'navigator', {
+                    value: originalNavigator,
+                    writable: true,
+                    configurable: true
+                });
+            }
+        }
+    }
+
     console.log(`\nTests completed. Passed: ${passed}, Failed: ${failed}`);
     if (failed > 0) process.exit(1);
 }
