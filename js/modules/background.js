@@ -25,13 +25,11 @@ export class BackgroundManager {
         let imageData = null;
 
         // Try to load from cache
-        const cacheKey = 'zenfocus_bg_cache';
-        const cachedData = localStorage.getItem(cacheKey);
-
+        const cachedData = localStorage.getItem('zenfocus_bg_cache');
         if (cachedData) {
             try {
                 const parsed = JSON.parse(cachedData);
-                const now = Date.now();
+                const now = new Date().getTime();
                 const oneHour = 60 * 60 * 1000;
 
                 if (now - parsed.timestamp < oneHour && parsed.timeOfDay === timeOfDay) {
@@ -39,7 +37,6 @@ export class BackgroundManager {
                 }
             } catch (e) {
                 console.warn('Failed to parse cached background:', e);
-                localStorage.removeItem(cacheKey);
             }
         }
 
@@ -47,8 +44,8 @@ export class BackgroundManager {
             try {
                 imageData = await this.fetchUnsplashImage(timeOfDay);
                 // Cache the new image
-                localStorage.setItem(cacheKey, JSON.stringify({
-                    timestamp: Date.now(),
+                localStorage.setItem('zenfocus_bg_cache', JSON.stringify({
+                    timestamp: new Date().getTime(),
                     timeOfDay: timeOfDay,
                     imageData: imageData
                 }));
