@@ -23,6 +23,7 @@ export class BackgroundManager {
     async setBackground() {
         const timeOfDay = this.getTimeOfDay();
         let imageData = null;
+        const cacheKey = 'zenfocus_bg_cache';
 
         // Try to load from cache
         const cachedData = localStorage.getItem('zenfocus_bg_cache');

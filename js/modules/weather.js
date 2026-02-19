@@ -11,19 +11,24 @@ export class WeatherWidget {
     }
 
     async init() {
-        // Check cache first
+        // Check for cached weather data
         try {
-            const cached = localStorage.getItem(CACHE_KEY);
-            if (cached) {
-                const { timestamp, data } = JSON.parse(cached);
-                if (Date.now() - timestamp < CACHE_DURATION) {
-                    this.updateDisplay(data);
-                    return;
+            const cachedData = localStorage.getItem('weather_cache');
+            if (cachedData) {
+                try {
+                    const { timestamp, data } = JSON.parse(cachedData);
+                    // Check if cache is less than 30 minutes old
+                    if (Date.now() - timestamp < 30 * 60 * 1000) {
+                        this.updateDisplay(data);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Error parsing weather cache:', e);
+                    localStorage.removeItem('weather_cache');
                 }
             }
         } catch (e) {
-            console.warn('Failed to read weather cache:', e);
-            try { localStorage.removeItem(CACHE_KEY); } catch (e2) {}
+            console.warn('Error reading weather cache:', e);
         }
 
         if (!navigator.geolocation) {
@@ -53,22 +58,23 @@ export class WeatherWidget {
             if (!response.ok) throw new Error('Weather API Error');
             const data = await response.json();
 
-            const displayData = {
+            const weatherData = {
                 temp: Math.round(data.main.temp),
                 description: data.weather[0].description,
                 icon: data.weather[0].icon
             };
 
-            this.updateDisplay(displayData);
+            this.updateDisplay(weatherData);
 
-            // Cache the result safely
+            // Cache the data
             try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                localStorage.setItem('weather_cache', JSON.stringify({
                     timestamp: Date.now(),
-                    data: displayData
+                    data: weatherData,
+                    coords: { lat, lon }
                 }));
             } catch (e) {
-                console.warn('Failed to cache weather data:', e);
+                console.warn('Error saving weather cache:', e);
             }
         } catch (error) {
             console.warn('Failed to fetch weather:', error);
