@@ -4,7 +4,7 @@ const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 export class WeatherWidget {
     constructor(widgetElement) {
         this.widgetElement = widgetElement;
-        this.apiKey = localStorage.getItem('openWeatherMapApiKey') || '';
+        this.apiKey = sessionStorage.getItem('openWeatherMapApiKey') || '';
         this.weatherIcon = widgetElement.querySelector('.weather-icon');
         this.weatherTemp = widgetElement.querySelector('.weather-temp');
         this.weatherDesc = widgetElement.querySelector('.weather-desc');

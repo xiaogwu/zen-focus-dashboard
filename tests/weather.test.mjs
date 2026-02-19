@@ -34,7 +34,8 @@ async function runTests() {
 
         // Setup
         global.localStorage.clear();
-        global.localStorage.setItem('openWeatherMapApiKey', 'test-api-key');
+        global.sessionStorage.clear();
+        global.sessionStorage.setItem('openWeatherMapApiKey', 'test-api-key');
 
         const widgetElement = createMockWidgetElement();
         const widget = new WeatherWidget(widgetElement);
@@ -65,7 +66,8 @@ async function runTests() {
 
         // Setup
         global.localStorage.clear();
-        global.localStorage.setItem('openWeatherMapApiKey', 'test-api-key');
+        global.sessionStorage.clear();
+        global.sessionStorage.setItem('openWeatherMapApiKey', 'test-api-key');
 
         const widgetElement = createMockWidgetElement();
         const widget = new WeatherWidget(widgetElement);
@@ -99,7 +101,8 @@ async function runTests() {
 
         // Setup
         global.localStorage.clear();
-        global.localStorage.setItem('openWeatherMapApiKey', 'test-api-key');
+        global.sessionStorage.clear();
+        global.sessionStorage.setItem('openWeatherMapApiKey', 'test-api-key');
 
         const widgetElement = createMockWidgetElement();
         const widget = new WeatherWidget(widgetElement);
@@ -143,6 +146,7 @@ async function runTests() {
 
         // Setup
         global.localStorage.clear();
+        global.sessionStorage.clear();
 
         const widgetElement = createMockWidgetElement();
         const widget = new WeatherWidget(widgetElement);

@@ -1,6 +1,6 @@
 export class BackgroundManager {
     constructor() {
-        this.apiKey = localStorage.getItem('unsplashApiKey') || '';
+        this.apiKey = sessionStorage.getItem('unsplashApiKey') || '';
         this.fallbackImages = [
             {
                 url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80',

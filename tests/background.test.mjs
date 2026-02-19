@@ -75,6 +75,7 @@ async function runTests() {
     // Helper to reset state
     function setup() {
         global.localStorage.clear();
+        global.sessionStorage.clear();
         mockedElements['background-credit'] = global.document.createElement('div');
         mockedElements['photo-author'] = global.document.createElement('div');
         global.document.body.style = {};
@@ -86,9 +87,9 @@ async function runTests() {
     try {
         console.log('Test: Initialization with API Key');
         setup();
-        global.localStorage.setItem('unsplashApiKey', 'test-key');
+        global.sessionStorage.setItem('unsplashApiKey', 'test-key');
         const bg = new BackgroundManager();
-        assert(bg.apiKey === 'test-key', 'Should load API key from localStorage');
+        assert(bg.apiKey === 'test-key', 'Should load API key from sessionStorage');
         console.log('PASS');
         passed++;
     } catch (e) {
@@ -148,7 +149,7 @@ async function runTests() {
     try {
         console.log('Test: API Fetching');
         setup();
-        global.localStorage.setItem('unsplashApiKey', 'test-key');
+        global.sessionStorage.setItem('unsplashApiKey', 'test-key');
         const bg = new BackgroundManager();
 
         const mockImage = {
@@ -186,7 +187,7 @@ async function runTests() {
     try {
         console.log('Test: Caching Strategy');
         setup();
-        global.localStorage.setItem('unsplashApiKey', 'test-key');
+        global.sessionStorage.setItem('unsplashApiKey', 'test-key');
         const bg = new BackgroundManager();
 
         // 5a: Valid Cache
@@ -252,7 +253,7 @@ async function runTests() {
     try {
         console.log('Test: Error Handling');
         setup();
-        global.localStorage.setItem('unsplashApiKey', 'test-key');
+        global.sessionStorage.setItem('unsplashApiKey', 'test-key');
         const bg = new BackgroundManager();
 
         mockFetch(null, false); // Fail fetch
