@@ -25,30 +25,28 @@ export class BackgroundManager {
         let imageData = null;
         const cacheKey = 'zenfocus_bg_cache';
 
-        // Check cache first
-        try {
-            const cachedData = localStorage.getItem(cacheKey);
-            if (cachedData) {
+        // Try to load from cache
+        const cachedData = localStorage.getItem('zenfocus_bg_cache');
+        if (cachedData) {
+            try {
                 const parsed = JSON.parse(cachedData);
-                const now = Date.now();
+                const now = new Date().getTime();
                 const oneHour = 60 * 60 * 1000;
 
-                // Cache valid for 1 hour and if time of day matches
                 if (now - parsed.timestamp < oneHour && parsed.timeOfDay === timeOfDay) {
                     imageData = parsed.imageData;
                 }
+            } catch (e) {
+                console.warn('Failed to parse cached background:', e);
             }
-        } catch (e) {
-            console.warn('Error reading background cache:', e);
-            localStorage.removeItem(cacheKey);
         }
 
         if (!imageData && this.apiKey) {
             try {
                 imageData = await this.fetchUnsplashImage(timeOfDay);
                 // Cache the new image
-                localStorage.setItem(cacheKey, JSON.stringify({
-                    timestamp: Date.now(),
+                localStorage.setItem('zenfocus_bg_cache', JSON.stringify({
+                    timestamp: new Date().getTime(),
                     timeOfDay: timeOfDay,
                     imageData: imageData
                 }));
@@ -99,8 +97,6 @@ export class BackgroundManager {
 
         if (creditElement && authorElement) {
             authorElement.textContent = image.author;
-            // Optionally make it a link
-            // authorElement.innerHTML = `<a href="${image.link}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">${image.author}</a>`;
         }
     }
 }
