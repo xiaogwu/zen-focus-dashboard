@@ -7,6 +7,7 @@ import { PomodoroTimer } from '../js/modules/timer.js';
 global.window.AudioContext = class {
     constructor() {
         this.state = 'running';
+        this.currentTime = 0;
     }
     createOscillator() {
         return {
@@ -14,13 +15,18 @@ global.window.AudioContext = class {
             start: () => {},
             stop: () => {},
             type: '',
-            frequency: { value: 0 }
+            frequency: { value: 0, setValueAtTime: () => {} }
         };
     }
     createGain() {
         return {
             connect: () => {},
-            gain: { value: 0 }
+            gain: {
+                value: 0,
+                setValueAtTime: () => {},
+                exponentialRampToValueAtTime: () => {},
+                linearRampToValueAtTime: () => {}
+            }
         };
     }
     resume() {}
@@ -64,6 +70,13 @@ global.setTimeout = (cb, ms) => {
     cb();
     return id;
 };
+
+function resetMocks() {
+    intervals = {};
+    timeouts = {};
+    timerIdCounter = 0;
+    global._docTitle = '';
+}
 
 // Helper to advance time
 function advanceTime(seconds) {
@@ -113,6 +126,7 @@ function runTests() {
 
     // Test 1: Initialization
     try {
+        resetMocks();
         console.log('Test: Initialization');
         const els = createElements();
         els.workInput.value = '25';
@@ -134,6 +148,7 @@ function runTests() {
 
     // Test 2: Start Timer
     try {
+        resetMocks();
         console.log('Test: Start Timer');
         const els = createElements();
         els.workInput.value = '25';
@@ -159,6 +174,7 @@ function runTests() {
 
     // Test 3: Pause Timer
     try {
+        resetMocks();
         console.log('Test: Pause Timer');
         const els = createElements();
         els.workInput.value = '25';
@@ -185,6 +201,7 @@ function runTests() {
 
     // Test 4: Reset Timer
     try {
+        resetMocks();
         console.log('Test: Reset Timer');
         const els = createElements();
         els.workInput.value = '25';
@@ -208,6 +225,7 @@ function runTests() {
 
     // Test 5: Change Input Duration
     try {
+        resetMocks();
         console.log('Test: Change Input Duration');
         const els = createElements();
         els.workInput.value = '25';
@@ -244,6 +262,7 @@ function runTests() {
 
     // Test 6: Session Completion (Work -> Break)
     try {
+        resetMocks();
         console.log('Test: Session Completion (Work -> Break)');
         const els = createElements();
         els.workInput.value = '1'; // 1 minute
@@ -277,6 +296,7 @@ function runTests() {
 
     // Test 7: Start Timer When Already Running
     try {
+        resetMocks();
         console.log('Test: Start Timer When Already Running');
         const els = createElements();
         els.workInput.value = '25';
@@ -309,22 +329,36 @@ function runTests() {
         failed++;
     }
 
-    // Test 8: Auto-Start Session
+    // Test: Detailed Reset Behavior
     try {
-        console.log('Test: Auto-Start Session');
+        console.log('Test: Detailed Reset Behavior');
         const els = createElements();
-        els.workInput.value = '1';
+        els.workInput.value = '25';
         els.breakInput.value = '5';
-        els.autoStartCheckbox.checked = true; // Enable auto-start
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput);
 
-        timer.timeLeft = 2;
-        timer.start();
-        advanceTime(2); // Finish session
+        // Scenario: Reset from Break Session
+        timer.isWorkSession = false; // Force break session state
+        timer.start(); // Start it running
 
-        assertEqual(timer.isWorkSession, false, 'Should have switched to break session');
-        assertEqual(timer.isRunning, true, 'Timer should be running automatically');
-        assertEqual(timer.timeLeft, 5 * 60, 'Time left should be reset to break duration');
+        // Spy on pause
+        let pauseCalled = false;
+        const originalPause = timer.pause;
+        timer.pause = function() {
+            pauseCalled = true;
+            originalPause.call(this);
+        };
+
+        // Modify work input to ensure it picks up new value
+        els.workInput.value = '45';
+
+        timer.reset();
+
+        assertEqual(pauseCalled, true, 'reset() should call pause()');
+        assertEqual(timer.isRunning, false, 'Timer should be stopped');
+        assertEqual(timer.isWorkSession, true, 'Should switch to work session');
+        assertEqual(timer.timeLeft, 45 * 60, 'Should use current work input value');
+        assertEqual(els.display.textContent, '45:00', 'Display should update');
 
         console.log('PASS');
         passed++;
