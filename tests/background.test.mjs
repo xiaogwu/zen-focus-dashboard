@@ -26,6 +26,7 @@ function assert(condition, message) {
 // Mock Fetch
 let mockFetchResponse = null;
 let mockFetchOk = true;
+let mockResponseOk = true;
 let fetchCalls = [];
 
 global.fetch = async (url) => {
@@ -34,14 +35,15 @@ global.fetch = async (url) => {
         throw new Error('Fetch failed');
     }
     return {
-        ok: true,
+        ok: mockResponseOk,
         json: async () => mockFetchResponse
     };
 };
 
-function mockFetch(response, ok = true) {
+function mockFetch(response, ok = true, responseOk = true) {
     mockFetchResponse = response;
     mockFetchOk = ok;
+    mockResponseOk = responseOk;
     fetchCalls = [];
 }
 
@@ -72,6 +74,19 @@ async function runTests() {
     let passed = 0;
     let failed = 0;
 
+    // Helper to mock console.warn
+    let warnCalls = [];
+    const originalWarn = console.warn;
+    function mockConsoleWarn() {
+        warnCalls = [];
+        console.warn = (...args) => {
+            warnCalls.push(args);
+        };
+    }
+    function restoreConsoleWarn() {
+        console.warn = originalWarn;
+    }
+
     // Helper to reset state
     function setup() {
         global.localStorage.clear();
@@ -81,6 +96,7 @@ async function runTests() {
         global.document.body.style = {};
         fetchCalls = [];
         restoreDate();
+        restoreConsoleWarn();
     }
 
     // Test 1: Initialization
@@ -266,6 +282,29 @@ async function runTests() {
 
         console.log('PASS');
         passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test 7: Fetch Unsplash Image Error (HTTP Error)
+    try {
+        console.log('Test: Fetch Unsplash Image Error (HTTP Error)');
+        setup();
+        global.sessionStorage.setItem('unsplashApiKey', 'test-key');
+        const bg = new BackgroundManager();
+
+        // Simulate Network Success but HTTP Error (e.g. 403 Forbidden or 500 Server Error)
+        mockFetch(null, true, false);
+
+        try {
+            await bg.fetchUnsplashImage('nature');
+            throw new Error('Should have thrown an error');
+        } catch (error) {
+            assert(error.message === 'Unsplash API Error', `Expected 'Unsplash API Error', got '${error.message}'`);
+            console.log('PASS');
+            passed++;
+        }
     } catch (e) {
         console.error('FAIL:', e.message);
         failed++;

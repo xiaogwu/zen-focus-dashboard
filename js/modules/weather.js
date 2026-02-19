@@ -80,11 +80,10 @@ export class WeatherWidget {
 
     async fetchWeather(lat, lon) {
         if (!this.apiKey) {
-            // Mock data if no API key
             this.updateDisplay({
-                temp: 22,
-                description: 'Sunny (Mock)',
-                icon: '01d'
+                temp: '--',
+                description: 'Click to set API Key',
+                icon: ''
             });
             return;
         }

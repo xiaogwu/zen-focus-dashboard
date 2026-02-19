@@ -5,7 +5,14 @@ class MockHTMLElement {
         this.classList = {
             contains: (cls) => this.classes.includes(cls),
             add: (cls) => { if (!this.classes.includes(cls)) this.classes.push(cls); },
-            remove: (cls) => this.classes = this.classes.filter(c => c !== cls)
+            remove: (cls) => this.classes = this.classes.filter(c => c !== cls),
+            toggle: (cls, force) => {
+                const has = this.classes.includes(cls);
+                const shouldAdd = force !== undefined ? force : !has;
+                if (shouldAdd && !has) this.classes.push(cls);
+                if (!shouldAdd && has) this.classes = this.classes.filter(c => c !== cls);
+                return shouldAdd;
+            }
         };
         this.classes = [];
         this.dataset = {};
@@ -45,6 +52,33 @@ class MockHTMLElement {
     appendChild(child) {
         this.children.push(child);
         child.parentElement = this;
+    }
+
+    insertBefore(newNode, referenceNode) {
+        if (!referenceNode) {
+            this.appendChild(newNode);
+            return newNode;
+        }
+        const index = this.children.indexOf(referenceNode);
+        if (index > -1) {
+            this.children.splice(index, 0, newNode);
+            newNode.parentElement = this;
+        } else {
+            this.appendChild(newNode);
+        }
+        return newNode;
+    }
+
+    remove() {
+        if (this.parentElement) {
+            this.parentElement.children = this.parentElement.children.filter(c => c !== this);
+            this.parentElement = null;
+        }
+    }
+
+    querySelector(selector) {
+        // Very basic selector support: tag name only
+        return this.children.find(c => c.tagName.toLowerCase() === selector.toLowerCase()) || null;
     }
 
     closest(selector) {

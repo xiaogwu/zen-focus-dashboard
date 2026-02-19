@@ -1,14 +1,14 @@
 import { showNotification } from './notification.js';
 
 export class PomodoroTimer {
-    constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput, notifier = showNotification) {
+    constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput, autoStartCheckbox) {
         this.displayElement = displayElement;
         this.startBtn = startBtn;
         this.pauseBtn = pauseBtn;
         this.resetBtn = resetBtn;
         this.workInput = workInput;
         this.breakInput = breakInput;
-        this.notifier = notifier;
+        this.autoStartCheckbox = autoStartCheckbox;
 
         this.timeLeft = 25 * 60; // Default 25 minutes
         this.timerId = null;
@@ -46,8 +46,21 @@ export class PomodoroTimer {
         return value;
     }
 
+    initAudio() {
+        if (!this.audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                this.audioCtx = new AudioContext();
+            }
+        }
+        if (this.audioCtx && this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+        }
+    }
+
     start() {
         if (!this.isRunning) {
+            this.initAudio();
             this.isRunning = true;
             this.timerId = setInterval(() => {
                 this.timeLeft--;
@@ -81,15 +94,24 @@ export class PomodoroTimer {
 
         // Switch session
         this.isWorkSession = !this.isWorkSession;
+
+        let message;
         if (this.isWorkSession) {
             this.timeLeft = this.getValidTime(this.workInput) * 60;
-            setTimeout(() => this.notifier('Break is over! Time to work.', 'info'), 10);
+            message = 'Break is over! Time to work.';
         } else {
             this.timeLeft = this.getValidTime(this.breakInput) * 60;
-            setTimeout(() => this.notifier('Work session complete! Take a break.', 'success'), 10);
+            message = 'Work session complete! Take a break.';
         }
+
         this.updateDisplay();
-        // Automatically start the next session? Maybe not. Let the user start.
+
+        setTimeout(() => {
+            alert(message);
+            if (this.autoStartCheckbox && this.autoStartCheckbox.checked) {
+                this.start();
+            }
+        }, 10);
     }
 
     updateDisplay() {
@@ -107,35 +129,37 @@ export class PomodoroTimer {
     }
 
     playSound() {
-        // Simple beep using AudioContext or just console.log for now if no file
-        // Using a data URI for a simple beep sound could work, but let's stick to alert for simplicity as per plan
-        // Or I can try to use a simple oscillator
         try {
-            if (!this.audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (AudioContext) {
-                    this.audioCtx = new AudioContext();
-                }
-            }
+            this.initAudio();
 
             if (this.audioCtx) {
-                // Ensure context is running (it might be suspended by the browser)
-                if (this.audioCtx.state === 'suspended') {
-                    this.audioCtx.resume();
-                }
+                const now = this.audioCtx.currentTime;
 
-                const oscillator = this.audioCtx.createOscillator();
-                const gainNode = this.audioCtx.createGain();
+                // Play a pleasant major triad arpeggio (C5, E5, G5)
+                const notes = [523.25, 659.25, 783.99];
 
-                oscillator.connect(gainNode);
-                gainNode.connect(this.audioCtx.destination);
+                notes.forEach((freq, index) => {
+                    const oscillator = this.audioCtx.createOscillator();
+                    const gainNode = this.audioCtx.createGain();
 
-                oscillator.type = 'sine';
-                oscillator.frequency.value = 880; // A5
-                gainNode.gain.value = 0.1;
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioCtx.destination);
 
-                oscillator.start();
-                setTimeout(() => oscillator.stop(), 500);
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = freq;
+
+                    // Stagger notes slightly for an arpeggio effect
+                    const startTime = now + (index * 0.1);
+                    const duration = 0.5;
+
+                    // Envelope: fast attack, slow exponential decay
+                    gainNode.gain.setValueAtTime(0, startTime);
+                    gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + duration);
+                });
             }
         } catch (e) {
             console.error('Audio play failed', e);
