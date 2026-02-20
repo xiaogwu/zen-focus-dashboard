@@ -43,8 +43,7 @@ describe('WeatherWidget', () => {
         global.fetch = mock.fn(() => Promise.resolve({
             ok: true,
             json: async () => ({
-                main: { temp: 25 },
-                weather: [{ description: 'Sunny', icon: '01d' }]
+                current: { temperature_2m: 25, weather_code: 0, is_day: 1 }
             })
         }));
 
@@ -54,6 +53,7 @@ describe('WeatherWidget', () => {
             querySelector: mock.fn((selector) => ({
                 textContent: '',
                 style: {},
+                addEventListener: mock.fn(),
             })),
         };
 
@@ -66,7 +66,6 @@ describe('WeatherWidget', () => {
 
     test('constructor initializes correctly', () => {
         assert.strictEqual(widget.widgetElement, mockWidgetElement);
-        assert.strictEqual(widget.apiKey, '');
         assert.strictEqual(mockWidgetElement.querySelector.mock.calls.length, 3);
     });
 
@@ -81,48 +80,30 @@ describe('WeatherWidget', () => {
         await widget.init();
 
         assert.strictEqual(mockGeolocation.getCurrentPosition.mock.calls.length, 1);
-        const successCallback = mockGeolocation.getCurrentPosition.mock.calls[0].arguments[0];
-        // We already called successCallback in implementation,
-        // but verifying we can extract it is good practice.
 
         assert.strictEqual(widget.fetchWeather.mock.calls.length, 1);
         assert.strictEqual(widget.fetchWeather.mock.calls[0].arguments[0], 10);
         assert.strictEqual(widget.fetchWeather.mock.calls[0].arguments[1], 20);
     });
 
-    test('fetchWeather uses mock data without API key', async () => {
-        // Setup specific condition
-        widget.apiKey = '';
-        widget.updateDisplay = mock.fn();
-
-        await widget.fetchWeather(10, 20);
-
-        assert.strictEqual(widget.updateDisplay.mock.calls.length, 1);
-        const data = widget.updateDisplay.mock.calls[0].arguments[0];
-        assert.strictEqual(data.temp, 22);
-        assert.strictEqual(data.description, 'Sunny (Mock)');
-    });
-
-    test('fetchWeather calls API with key', async () => {
-        widget.apiKey = 'test-key';
+    test('fetchWeather calls Open-Meteo API', async () => {
         widget.updateDisplay = mock.fn();
 
         await widget.fetchWeather(10, 20);
 
         assert.strictEqual(global.fetch.mock.calls.length, 1);
         const url = global.fetch.mock.calls[0].arguments[0];
-        assert.ok(url.startsWith('https://api.openweathermap.org/data/2.5/weather'));
-        assert.ok(url.includes('lat=10&lon=20'));
-        assert.ok(url.includes('appid=test-key'));
+        assert.ok(url.startsWith('https://api.open-meteo.com/v1/forecast'));
+        assert.ok(url.includes('latitude=10'));
+        assert.ok(url.includes('longitude=20'));
 
         assert.strictEqual(widget.updateDisplay.mock.calls.length, 1);
         const data = widget.updateDisplay.mock.calls[0].arguments[0];
         assert.strictEqual(data.temp, 25);
-        assert.strictEqual(data.description, 'Sunny');
+        assert.strictEqual(data.description, 'Clear sky');
     });
 
     test('fetchWeather handles API error', async () => {
-        widget.apiKey = 'test-key';
         global.fetch.mock.mockImplementation(() => Promise.resolve({ ok: false }));
         widget.showError = mock.fn();
 
@@ -134,13 +115,13 @@ describe('WeatherWidget', () => {
     });
 
     test('updateDisplay updates DOM', () => {
-        const data = { temp: 30, description: 'Cloudy', icon: '02d' };
+        const data = { temp: 30, description: 'Cloudy', icon: '☁️' };
 
         widget.updateDisplay(data);
 
         assert.strictEqual(widget.weatherTemp.textContent, '30°C');
         assert.strictEqual(widget.weatherDesc.textContent, 'Cloudy');
-        assert.ok(widget.weatherIcon.style.backgroundImage.includes('02d.png'));
+        assert.strictEqual(widget.weatherIcon.textContent, '☁️');
     });
 
     test('handleGeoError updates display', () => {

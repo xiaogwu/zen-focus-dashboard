@@ -1,64 +1,92 @@
-const CACHE_KEY = 'zenfocus_weather_cache';
-const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+const WMO_DESCRIPTIONS = {
+    0: 'Clear sky',
+    1: 'Mainly clear',
+    2: 'Partly cloudy',
+    3: 'Overcast',
+    45: 'Foggy',
+    48: 'Depositing rime fog',
+    51: 'Light drizzle',
+    53: 'Moderate drizzle',
+    55: 'Dense drizzle',
+    56: 'Light freezing drizzle',
+    57: 'Dense freezing drizzle',
+    61: 'Slight rain',
+    63: 'Moderate rain',
+    65: 'Heavy rain',
+    66: 'Light freezing rain',
+    67: 'Heavy freezing rain',
+    71: 'Slight snowfall',
+    73: 'Moderate snowfall',
+    75: 'Heavy snowfall',
+    77: 'Snow grains',
+    80: 'Slight rain showers',
+    81: 'Moderate rain showers',
+    82: 'Violent rain showers',
+    85: 'Slight snow showers',
+    86: 'Heavy snow showers',
+    95: 'Thunderstorm',
+    96: 'Thunderstorm with slight hail',
+    99: 'Thunderstorm with heavy hail',
+};
+
+const WMO_ICONS = {
+    0:  { day: '\u2600\uFE0F', night: '\uD83C\uDF19' },   // Clear sky: ☀️ / 🌙
+    1:  { day: '\uD83C\uDF24\uFE0F', night: '\uD83C\uDF19' }, // Mainly clear: 🌤️ / 🌙
+    2:  { day: '\u26C5', night: '\u26C5' },                 // Partly cloudy: ⛅
+    3:  { day: '\u2601\uFE0F', night: '\u2601\uFE0F' },     // Overcast: ☁️
+    45: { day: '\uD83C\uDF2B\uFE0F', night: '\uD83C\uDF2B\uFE0F' }, // Fog: 🌫️
+    48: { day: '\uD83C\uDF2B\uFE0F', night: '\uD83C\uDF2B\uFE0F' }, // Rime fog: 🌫️
+    51: { day: '\uD83C\uDF26\uFE0F', night: '\uD83C\uDF26\uFE0F' }, // Light drizzle: 🌦️
+    53: { day: '\uD83C\uDF26\uFE0F', night: '\uD83C\uDF26\uFE0F' }, // Moderate drizzle: 🌦️
+    55: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Dense drizzle: 🌧️
+    56: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Light freezing drizzle: 🌧️
+    57: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Dense freezing drizzle: 🌧️
+    61: { day: '\uD83C\uDF26\uFE0F', night: '\uD83C\uDF26\uFE0F' }, // Slight rain: 🌦️
+    63: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Moderate rain: 🌧️
+    65: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Heavy rain: 🌧️
+    66: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Light freezing rain: 🌧️
+    67: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Heavy freezing rain: 🌧️
+    71: { day: '\uD83C\uDF28\uFE0F', night: '\uD83C\uDF28\uFE0F' }, // Slight snow: 🌨️
+    73: { day: '\uD83C\uDF28\uFE0F', night: '\uD83C\uDF28\uFE0F' }, // Moderate snow: 🌨️
+    75: { day: '\uD83C\uDF28\uFE0F', night: '\uD83C\uDF28\uFE0F' }, // Heavy snow: 🌨️
+    77: { day: '\uD83C\uDF28\uFE0F', night: '\uD83C\uDF28\uFE0F' }, // Snow grains: 🌨️
+    80: { day: '\uD83C\uDF26\uFE0F', night: '\uD83C\uDF26\uFE0F' }, // Slight rain showers: 🌦️
+    81: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Moderate rain showers: 🌧️
+    82: { day: '\uD83C\uDF27\uFE0F', night: '\uD83C\uDF27\uFE0F' }, // Violent rain showers: 🌧️
+    85: { day: '\uD83C\uDF28\uFE0F', night: '\uD83C\uDF28\uFE0F' }, // Slight snow showers: 🌨️
+    86: { day: '\uD83C\uDF28\uFE0F', night: '\uD83C\uDF28\uFE0F' }, // Heavy snow showers: 🌨️
+    95: { day: '\u26C8\uFE0F', night: '\u26C8\uFE0F' },     // Thunderstorm: ⛈️
+    96: { day: '\u26C8\uFE0F', night: '\u26C8\uFE0F' },     // Thunderstorm + slight hail: ⛈️
+    99: { day: '\u26C8\uFE0F', night: '\u26C8\uFE0F' },     // Thunderstorm + heavy hail: ⛈️
+};
 
 export class WeatherWidget {
     constructor(widgetElement) {
         this.widgetElement = widgetElement;
-
-        // Security Fix: Move API key from localStorage to sessionStorage if present
-        // This prevents persistent storage of sensitive keys while maintaining session usability
-        const legacyKey = localStorage.getItem('openWeatherMapApiKey');
-        if (legacyKey) {
-            sessionStorage.setItem('openWeatherMapApiKey', legacyKey);
-            localStorage.removeItem('openWeatherMapApiKey');
-        }
-
-        this.apiKey = sessionStorage.getItem('openWeatherMapApiKey') || '';
         this.weatherIcon = widgetElement.querySelector('.weather-icon');
         this.weatherTemp = widgetElement.querySelector('.weather-temp');
         this.weatherDesc = widgetElement.querySelector('.weather-desc');
-        this.settingsBtn = widgetElement.querySelector('#weather-settings-btn');
+        this.unit = localStorage.getItem('weather_unit') || 'C';
+        this.tempC = null;
 
-        this.settingsDialog = document.getElementById('weather-settings-dialog');
-        this.apiKeyInput = document.getElementById('weather-api-key');
-
-        if (this.settingsBtn) {
-            this.settingsBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.openSettings();
-            });
-        }
-
-        if (this.settingsDialog) {
-            this.settingsDialog.addEventListener('close', () => this.handleDialogClose());
-        }
-
-        // Allow user to set API key via UI interaction (click on widget if key is missing)
-        this.widgetElement.addEventListener('click', () => {
-            if (!this.apiKey) {
-                this.openSettings();
-            }
-        });
-    }
-
-    openSettings() {
-        if (this.settingsDialog && this.apiKeyInput) {
-            this.apiKeyInput.value = this.apiKey;
-            this.settingsDialog.showModal();
+        if (this.weatherTemp) {
+            this.weatherTemp.style.cursor = 'pointer';
+            this.weatherTemp.addEventListener('click', () => this.toggleUnit());
         }
     }
 
-    handleDialogClose() {
-        if (this.settingsDialog.returnValue === 'save') {
-            const key = this.apiKeyInput.value.trim();
-            this.apiKey = key;
-            if (this.apiKey) {
-                sessionStorage.setItem('openWeatherMapApiKey', this.apiKey);
-            } else {
-                sessionStorage.removeItem('openWeatherMapApiKey');
-            }
-            this.init();
+    toggleUnit() {
+        this.unit = this.unit === 'C' ? 'F' : 'C';
+        localStorage.setItem('weather_unit', this.unit);
+        if (this.tempC !== null) {
+            this.weatherTemp.textContent = this.formatTemp(this.tempC);
         }
+    }
+
+    formatTemp(tempC) {
+        if (tempC === '--') return `--`;
+        const value = this.unit === 'F' ? Math.round(tempC * 9 / 5 + 32) : tempC;
+        return `${value}\u00B0${this.unit}`;
     }
 
     async init() {
@@ -94,24 +122,21 @@ export class WeatherWidget {
     }
 
     async fetchWeather(lat, lon) {
-        if (!this.apiKey) {
-            this.updateDisplay({
-                temp: '--',
-                description: 'Click to set API Key',
-                icon: ''
-            });
-            return;
-        }
-
         try {
-            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${this.apiKey}`);
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day&timezone=auto`);
             if (!response.ok) throw new Error('Weather API Error');
             const data = await response.json();
 
+            const weatherCode = data.current.weather_code;
+            const isDay = data.current.is_day;
+            const description = WMO_DESCRIPTIONS[weatherCode] || 'Unknown';
+            const iconEntry = WMO_ICONS[weatherCode];
+            const icon = iconEntry ? (isDay ? iconEntry.day : iconEntry.night) : '';
+
             const weatherData = {
-                temp: Math.round(data.main.temp),
-                description: data.weather[0].description,
-                icon: data.weather[0].icon
+                temp: Math.round(data.current.temperature_2m),
+                description,
+                icon
             };
 
             this.updateDisplay(weatherData);
@@ -134,7 +159,6 @@ export class WeatherWidget {
 
     handleGeoError(error) {
         console.warn('Geolocation error:', error);
-        // Fallback to a default location or just show generic message
         this.updateDisplay({
             temp: '--',
             description: 'Location access denied',
@@ -143,17 +167,14 @@ export class WeatherWidget {
     }
 
     updateDisplay(data) {
-        this.weatherTemp.textContent = `${data.temp}°C`;
+        this.tempC = data.temp;
+        this.weatherTemp.textContent = this.formatTemp(data.temp);
         this.weatherDesc.textContent = data.description;
         if (data.icon) {
-            // Use OpenWeatherMap icons or a local mapping
-            // Using OWM icon URL
-            this.weatherIcon.style.backgroundImage = `url(https://openweathermap.org/img/wn/${data.icon}.png)`;
-            this.weatherIcon.style.width = '50px';
-            this.weatherIcon.style.height = '50px';
-            this.weatherIcon.style.backgroundSize = 'contain';
-            this.weatherIcon.style.backgroundRepeat = 'no-repeat';
+            this.weatherIcon.textContent = data.icon;
+            this.weatherIcon.style.backgroundImage = 'none';
         } else {
+            this.weatherIcon.textContent = '';
             this.weatherIcon.style.backgroundImage = 'none';
         }
     }
