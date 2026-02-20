@@ -1,0 +1,35 @@
+{
+  "name": "zen-focus-dashboard",
+  "version": "1.0.0",
+  "description": "A minimalist productivity dashboard combining task management with focus tools, built with vanilla JavaScript.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx serve .",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:node": "node --test js/tests/weather.test.js",
+    "lint": "eslint js/",
+    "lint:fix": "eslint js/ --fix"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "eslint": "^9.0.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/js/modules/*.test.js"
+    ],
+    "transform": {}
+  },
+  "keywords": [
+    "dashboard",
+    "productivity",
+    "pomodoro",
+    "focus",
+    "vanilla-js"
+  ],
+  "license": "MIT"
+}
