@@ -231,12 +231,12 @@ export class PomodoroTimer {
                     oscillator.frequency.value = freq;
 
                     // Stagger notes slightly for an arpeggio effect
-                    const startTime = now + (index * 0.1);
-                    const duration = 0.5;
+                    const startTime = now + (index * 0.15);
+                    const duration = 0.6;
 
                     // Envelope: fast attack, slow exponential decay
                     gainNode.gain.setValueAtTime(0, startTime);
-                    gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.05);
+                    gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
                     gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
 
                     oscillator.start(startTime);
