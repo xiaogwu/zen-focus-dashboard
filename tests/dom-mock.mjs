@@ -128,6 +128,36 @@ class MockHTMLElement {
         }
     }
 
+    removeChild(child) {
+        const index = this.children.indexOf(child);
+        if (index > -1) {
+            this.children.splice(index, 1);
+            child.parentElement = null;
+        }
+        return child;
+    }
+
+    focus() {}
+
+    select() {}
+
+    blur() {
+        if (this.listeners['blur']) {
+            this.listeners['blur'].forEach(cb => cb({
+                target: this,
+                stopPropagation: () => {},
+                preventDefault: () => {}
+            }));
+        }
+    }
+
+    get nextSibling() {
+        if (!this.parentElement) return null;
+        const siblings = this.parentElement.children;
+        const index = siblings.indexOf(this);
+        return index > -1 && index < siblings.length - 1 ? siblings[index + 1] : null;
+    }
+
     querySelector(selector) {
         if (selector.startsWith('.')) {
             const className = selector.substring(1);

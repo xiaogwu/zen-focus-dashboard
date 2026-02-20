@@ -36,6 +36,13 @@ describe('TaskManager', () => {
         expect(newTaskManager.tasks.length).toBe(1);
         expect(newTaskManager.tasks[0].text).toBe('Stored Task');
         expect(listElement.children.length).toBe(1);
+
+        // Verify checkbox exists
+        const li = listElement.children[0];
+        const checkbox = li.querySelector('.task-checkbox');
+        expect(checkbox).not.toBeNull();
+        expect(checkbox.type).toBe('checkbox');
+        expect(checkbox.checked).toBe(false);
     });
 
     test('should add a new task', () => {
@@ -90,6 +97,10 @@ describe('TaskManager', () => {
         const li = listElement.querySelector(`li[data-id="${taskId}"]`);
         expect(li.classList.contains('completed')).toBe(true);
 
+        // Verify checkbox state
+        const checkbox = li.querySelector('.task-checkbox');
+        expect(checkbox.checked).toBe(true);
+
         const stored = JSON.parse(localStorage.getItem('zenFocusTasks'));
         expect(stored[0].completed).toBe(true);
 
@@ -100,5 +111,8 @@ describe('TaskManager', () => {
         // Re-query the li element as render() recreates DOM nodes
         const updatedLi = listElement.querySelector(`li[data-id="${taskId}"]`);
         expect(updatedLi.classList.contains('completed')).toBe(false);
+
+        const updatedCheckbox = updatedLi.querySelector('.task-checkbox');
+        expect(updatedCheckbox.checked).toBe(false);
     });
 });

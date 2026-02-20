@@ -21,24 +21,35 @@ export class TaskManager {
             if (e.key === 'Enter') this.addTask();
         });
 
-        // Event delegation for delete and toggle
+        // Event delegation for delete, toggle, and edit
         this.listElement.addEventListener('click', (e) => {
             if (e.target.classList.contains('delete-btn')) {
                 const id = this.getTaskId(e.target);
                 this.deleteTask(id);
-            } else if (e.target.tagName === 'LI' || e.target.tagName === 'SPAN') {
+            } else if (e.target.classList.contains('task-checkbox')) {
                 const id = this.getTaskId(e.target);
                 this.toggleTask(id);
+            } else if (e.target.tagName === 'SPAN') {
+                const li = e.target.closest('li');
+                if (li) {
+                    const id = this.getTaskId(li);
+                    this.startEdit(li, id);
+                }
             }
         });
 
         // Keyboard navigation for tasks
         this.listElement.addEventListener('keydown', (e) => {
             const li = e.target.closest('li');
-            if (li && e.target.tagName === 'SPAN' && (e.key === 'Enter' || e.key === ' ')) {
+            if (!li) return;
+            if (e.target.classList.contains('task-checkbox') && (e.key === 'Enter' || e.key === ' ')) {
                 e.preventDefault();
                 const id = this.getTaskId(li);
                 this.toggleTask(id);
+            } else if (e.target.tagName === 'SPAN' && e.key === 'Enter') {
+                e.preventDefault();
+                const id = this.getTaskId(li);
+                this.startEdit(li, id);
             }
         });
     }
@@ -129,11 +140,15 @@ export class TaskManager {
         li.className = `task-item ${task.completed ? 'completed' : ''}`;
         li.dataset.id = task.id;
 
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = task.completed;
+        checkbox.className = 'task-checkbox';
+        checkbox.setAttribute('aria-label', `Mark "${task.text}" as ${task.completed ? 'incomplete' : 'complete'}`);
+
         const span = document.createElement('span');
         span.textContent = task.text;
         span.tabIndex = 0;
-        span.setAttribute('role', 'checkbox');
-        span.setAttribute('aria-checked', task.completed);
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
@@ -141,6 +156,7 @@ export class TaskManager {
         deleteBtn.setAttribute('aria-label', `Delete task: ${task.text}`);
         deleteBtn.dataset.id = task.id;
 
+        li.appendChild(checkbox);
         li.appendChild(span);
         li.appendChild(deleteBtn);
         // Cache span reference for performance to avoid querySelector in render loop
@@ -154,11 +170,14 @@ export class TaskManager {
             li.classList.toggle('completed', task.completed);
         }
 
+        const checkbox = li.querySelector('.task-checkbox');
+        if (checkbox) {
+            checkbox.checked = task.completed;
+            checkbox.setAttribute('aria-label', `Mark "${task.text}" as ${task.completed ? 'incomplete' : 'complete'}`);
+        }
+
         const span = li.querySelector('span');
         if (span) {
-            if (span.getAttribute('aria-checked') !== String(task.completed)) {
-                span.setAttribute('aria-checked', task.completed);
-            }
             if (span.textContent !== task.text) {
                 span.textContent = task.text;
                 const deleteBtn = li.querySelector('.delete-btn');
@@ -166,6 +185,60 @@ export class TaskManager {
                     deleteBtn.setAttribute('aria-label', `Delete task: ${task.text}`);
                 }
             }
+        }
+    }
+
+    startEdit(li, taskId) {
+        if (li.classList.contains('editing')) return;
+
+        const span = li.querySelector('span');
+        if (!span) return;
+
+        const originalText = span.textContent;
+        li.classList.add('editing');
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'task-edit-input';
+        input.value = originalText;
+
+        const commitEdit = () => {
+            if (input.parentElement !== li) return;
+            this.saveEdit(taskId, input.value, originalText);
+            li.classList.remove('editing');
+            li.removeChild(input);
+            span.style.display = '';
+        };
+
+        input.addEventListener('blur', () => {
+            commitEdit();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                input.value = originalText;
+                input.blur();
+            }
+        });
+
+        span.style.display = 'none';
+        li.insertBefore(input, span.nextSibling || li.querySelector('.delete-btn'));
+        input.focus();
+        input.select();
+    }
+
+    saveEdit(taskId, newText, originalText) {
+        const trimmed = newText.trim();
+        if (!trimmed) return;
+
+        const task = this.tasks.find(t => t.id === taskId);
+        if (task && task.text !== trimmed) {
+            task.text = trimmed;
+            this.saveTasks();
         }
     }
 }

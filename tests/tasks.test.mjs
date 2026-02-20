@@ -277,16 +277,15 @@ function runTests() {
         taskManager.addTask();
 
         const taskLi = listElement.children[0];
+        const checkbox = taskLi.querySelector('.task-checkbox');
         const span = taskLi.querySelector('span');
         const deleteBtn = taskLi.querySelector('.delete-btn');
 
         // Verification
-        assert(span.getAttribute('role') === 'checkbox', 'Task text should have role="checkbox"');
-        // Check both property and attribute as mock might behave differently than real DOM depending on implementation details
-        // In our mock, we implemented setAttribute and tabIndex property separately, but creating logic sets property.
-        // Wait, creating logic: span.tabIndex = 0;
+        assert(checkbox !== null, 'Task should have a checkbox');
+        assert(checkbox.type === 'checkbox', 'Checkbox should be type="checkbox"');
+        assert(checkbox.checked === false, 'Checkbox should be unchecked initially');
         assert(span.tabIndex === 0, 'Task text should be focusable (tabIndex property)');
-        assert(span.getAttribute('aria-checked') === 'false', 'Task text should have aria-checked="false" initially');
         assert(deleteBtn.getAttribute('aria-label') === 'Delete task: Accessible Task', 'Delete button should have correct aria-label');
 
         // Toggle task
@@ -296,9 +295,9 @@ function runTests() {
         // render() is called which re-creates elements in current implementation
         // So we need to re-query elements
         const updatedTaskLi = listElement.children[0];
-        const updatedSpan = updatedTaskLi.querySelector('span');
+        const updatedCheckbox = updatedTaskLi.querySelector('.task-checkbox');
 
-        assert(updatedSpan.getAttribute('aria-checked') === 'true', 'Task text should have aria-checked="true" after toggle');
+        assert(updatedCheckbox.checked === true, 'Checkbox should be checked after toggle');
 
         console.log('PASS');
         passed++;
@@ -323,10 +322,10 @@ function runTests() {
         inputElement.value = 'Keyboard Task';
         taskManager.addTask();
         let taskLi = listElement.children[0];
-        let span = taskLi.querySelector('span');
+        let checkbox = taskLi.querySelector('.task-checkbox');
         const task = taskManager.tasks[0];
 
-        // Simulate Keydown 'Enter' on span
+        // Simulate Keydown on listElement
         const triggerKeydown = (key, target) => {
             const event = {
                 target: target,
@@ -334,33 +333,117 @@ function runTests() {
                 preventDefault: () => {},
                 stopPropagation: () => {}
             };
-            // Access listeners from the mock object
             if (listElement.listeners['keydown']) {
                 listElement.listeners['keydown'].forEach(cb => cb(event));
             }
         };
 
-        // Action: Press Enter on span
-        triggerKeydown('Enter', span);
+        // Action: Press Enter on checkbox to toggle
+        triggerKeydown('Enter', checkbox);
 
         // Re-query because render() replaces elements
         taskLi = listElement.children[0];
-        span = taskLi.querySelector('span');
+        checkbox = taskLi.querySelector('.task-checkbox');
 
         // Verification
-        assert(task.completed === true, 'Task should be completed after Enter key');
-        assert(span.getAttribute('aria-checked') === 'true', 'aria-checked should be true');
+        assert(task.completed === true, 'Task should be completed after Enter key on checkbox');
+        assert(checkbox.checked === true, 'Checkbox should be checked');
 
-        // Action: Press Space on span
-        triggerKeydown(' ', span);
+        // Action: Press Space on checkbox to toggle back
+        triggerKeydown(' ', checkbox);
 
         // Re-query
         taskLi = listElement.children[0];
-        span = taskLi.querySelector('span');
+        checkbox = taskLi.querySelector('.task-checkbox');
 
         // Verification
-        assert(task.completed === false, 'Task should be incomplete after Space key');
-        assert(span.getAttribute('aria-checked') === 'false', 'aria-checked should be false');
+        assert(task.completed === false, 'Task should be incomplete after Space key on checkbox');
+        assert(checkbox.checked === false, 'Checkbox should be unchecked');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
+    // Test 9: Edit Task
+    try {
+        console.log('Test: Edit task via startEdit');
+
+        // Setup
+        global.localStorage.clear();
+        const listElement = global.document.createElement('ul');
+        const inputElement = global.document.createElement('input');
+        const addButtonElement = global.document.createElement('button');
+        const taskManager = new TaskManager(listElement, inputElement, addButtonElement);
+
+        // Add a task
+        inputElement.value = 'Original Task';
+        taskManager.addTask();
+        const task = taskManager.tasks[0];
+        let taskLi = listElement.children[0];
+
+        // Action: Start edit
+        taskManager.startEdit(taskLi, task.id);
+
+        // Verify editing state
+        assert(taskLi.classList.contains('editing'), 'LI should have editing class');
+
+        // Find the edit input (querySelector for class)
+        const editInput = taskLi.querySelector('.task-edit-input');
+        assert(editInput !== null, 'Edit input should exist');
+        assert(editInput.value === 'Original Task', 'Edit input should contain original text');
+
+        // Simulate typing new text and blur to commit
+        editInput.value = 'Edited Task';
+        editInput.blur();
+
+        // Verify task was updated
+        assert(task.text === 'Edited Task', 'Task text should be updated');
+
+        // Verify localStorage update
+        const storedTasks = JSON.parse(global.localStorage.getItem('zenFocusTasks'));
+        assert(storedTasks[0].text === 'Edited Task', 'localStorage should reflect edited text');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        console.error(e.stack);
+        failed++;
+    }
+
+    // Test 10: Edit Task with empty text preserves original
+    try {
+        console.log('Test: Edit task with empty text preserves original');
+
+        // Setup
+        global.localStorage.clear();
+        const listElement = global.document.createElement('ul');
+        const inputElement = global.document.createElement('input');
+        const addButtonElement = global.document.createElement('button');
+        const taskManager = new TaskManager(listElement, inputElement, addButtonElement);
+
+        // Add a task
+        inputElement.value = 'Keep This Task';
+        taskManager.addTask();
+        const task = taskManager.tasks[0];
+        let taskLi = listElement.children[0];
+
+        // Action: Start edit
+        taskManager.startEdit(taskLi, task.id);
+
+        // Find the edit input
+        const editInput = taskLi.querySelector('.task-edit-input');
+
+        // Set empty text and blur
+        editInput.value = '   ';
+        editInput.blur();
+
+        // Verify task text was NOT changed
+        assert(task.text === 'Keep This Task', 'Task text should remain unchanged when edit is empty');
 
         console.log('PASS');
         passed++;
