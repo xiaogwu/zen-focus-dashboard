@@ -11,6 +11,8 @@ export class PomodoroTimer {
         this.breakInput = breakInput;
         this.autoStartCheckbox = autoStartCheckbox;
         this.notifier = notifier;
+        this.timerSection = document.getElementById('timer-section');
+        this.sessionLabel = document.querySelector('.session-label');
 
         this.timeLeft = 25 * 60; // Default 25 minutes
         this.timerId = null;
@@ -20,6 +22,7 @@ export class PomodoroTimer {
 
         this.bindEvents();
         this.updateDisplay();
+        this.updateSessionIndicator();
     }
 
     bindEvents() {
@@ -88,6 +91,7 @@ export class PomodoroTimer {
         this.isWorkSession = true;
         this.timeLeft = this.getValidTime(this.workInput) * 60;
         this.updateDisplay();
+        this.updateSessionIndicator();
     }
 
     completeSession() {
@@ -96,6 +100,7 @@ export class PomodoroTimer {
 
         // Switch session
         this.isWorkSession = !this.isWorkSession;
+        this.updateSessionIndicator();
 
         let message;
         let type;
@@ -128,6 +133,15 @@ export class PomodoroTimer {
 
         // Update document title for visibility in other tabs
         document.title = `${this.displayElement.textContent} - ZenFocus`;
+    }
+
+    updateSessionIndicator() {
+        if (this.timerSection) {
+            this.timerSection.classList.toggle('break-mode', !this.isWorkSession);
+        }
+        if (this.sessionLabel) {
+            this.sessionLabel.textContent = this.isWorkSession ? 'Work' : 'Break';
+        }
     }
 
     toggleControls(running) {
