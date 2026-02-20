@@ -122,11 +122,21 @@ export class PomodoroTimer {
         if (this.audioCtx && this.audioCtx.state === 'suspended') {
             await this.audioCtx.resume();
         }
+        // Mobile Safari requires actual audio output during a user gesture to
+        // fully unlock the AudioContext. Play a silent buffer to ensure it.
+        if (this.audioCtx && !this._audioUnlocked) {
+            const buf = this.audioCtx.createBuffer(1, 1, this.audioCtx.sampleRate);
+            const src = this.audioCtx.createBufferSource();
+            src.buffer = buf;
+            src.connect(this.audioCtx.destination);
+            src.start(0);
+            this._audioUnlocked = true;
+        }
     }
 
-    start() {
+    async start() {
         if (!this.isRunning) {
-            this.initAudio();
+            await this.initAudio();
             this.isRunning = true;
             this.timerId = setInterval(() => {
                 this.timeLeft--;
