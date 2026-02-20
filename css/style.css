@@ -70,6 +70,10 @@ main {
     main {
         grid-template-columns: 1fr 1fr; /* Two columns for larger screens */
     }
+
+    #timer-section {
+        align-self: center;
+    }
 }
 
 /* Timer Styles */
