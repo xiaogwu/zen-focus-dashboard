@@ -20,8 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const workInput = document.getElementById('work-duration');
     const breakInput = document.getElementById('break-duration');
     const autoStartCheckbox = document.getElementById('auto-start');
+    const resetDefaultsBtn = document.getElementById('reset-defaults-btn');
     if (timerDisplay && startBtn && pauseBtn && resetBtn && workInput && breakInput) {
-        new PomodoroTimer(timerDisplay, startBtn, pauseBtn, resetBtn, workInput, breakInput, autoStartCheckbox);
+        new PomodoroTimer(timerDisplay, startBtn, pauseBtn, resetBtn, workInput, breakInput, autoStartCheckbox, undefined, resetDefaultsBtn);
     }
 
     // Initialize Dynamic Backgrounds

@@ -1,8 +1,12 @@
 
 import { showNotification } from './notification.js';
 
+const DEFAULT_WORK = 25;
+const DEFAULT_BREAK = 5;
+const STORAGE_KEY = 'zenFocusTimerSettings';
+
 export class PomodoroTimer {
-    constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput, autoStartCheckbox, notifier = showNotification) {
+    constructor(displayElement, startBtn, pauseBtn, resetBtn, workInput, breakInput, autoStartCheckbox, notifier = showNotification, resetDefaultsBtn = null) {
         this.displayElement = displayElement;
         this.startBtn = startBtn;
         this.pauseBtn = pauseBtn;
@@ -11,6 +15,7 @@ export class PomodoroTimer {
         this.breakInput = breakInput;
         this.autoStartCheckbox = autoStartCheckbox;
         this.notifier = notifier;
+        this.resetDefaultsBtn = resetDefaultsBtn;
         this.timerSection = document.getElementById('timer-section');
         this.sessionLabel = document.querySelector('.session-label');
 
@@ -20,9 +25,53 @@ export class PomodoroTimer {
         this.isRunning = false;
         this.audioCtx = null;
 
+        this.loadSettings();
         this.bindEvents();
         this.updateDisplay();
         this.updateSessionIndicator();
+    }
+
+    loadSettings() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const settings = JSON.parse(raw);
+                if (settings.work != null) {
+                    this.workInput.value = settings.work;
+                }
+                if (settings.break != null) {
+                    this.breakInput.value = settings.break;
+                }
+                if (settings.autoStart != null && this.autoStartCheckbox) {
+                    this.autoStartCheckbox.checked = settings.autoStart;
+                }
+                this.timeLeft = this.getValidTime(this.workInput) * 60;
+            }
+        } catch {
+            // Ignore parse errors; keep HTML defaults
+        }
+    }
+
+    saveSettings() {
+        const settings = {
+            work: this.workInput.value,
+            break: this.breakInput.value,
+            autoStart: this.autoStartCheckbox ? this.autoStartCheckbox.checked : false
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    }
+
+    resetDefaults() {
+        this.workInput.value = DEFAULT_WORK;
+        this.breakInput.value = DEFAULT_BREAK;
+        if (this.autoStartCheckbox) {
+            this.autoStartCheckbox.checked = false;
+        }
+        if (!this.isRunning && this.isWorkSession) {
+            this.timeLeft = DEFAULT_WORK * 60;
+            this.updateDisplay();
+        }
+        this.saveSettings();
     }
 
     bindEvents() {
@@ -35,6 +84,7 @@ export class PomodoroTimer {
                 this.timeLeft = this.getValidTime(this.workInput) * 60;
                 this.updateDisplay();
             }
+            this.saveSettings();
         });
 
         this.breakInput.addEventListener('change', () => {
@@ -42,7 +92,18 @@ export class PomodoroTimer {
                 this.timeLeft = this.getValidTime(this.breakInput) * 60;
                 this.updateDisplay();
             }
+            this.saveSettings();
         });
+
+        if (this.autoStartCheckbox) {
+            this.autoStartCheckbox.addEventListener('change', () => {
+                this.saveSettings();
+            });
+        }
+
+        if (this.resetDefaultsBtn) {
+            this.resetDefaultsBtn.addEventListener('click', () => this.resetDefaults());
+        }
     }
 
     getValidTime(input) {
@@ -51,7 +112,7 @@ export class PomodoroTimer {
         return value;
     }
 
-    initAudio() {
+    async initAudio() {
         if (!this.audioCtx) {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
             if (AudioContext) {
@@ -59,7 +120,7 @@ export class PomodoroTimer {
             }
         }
         if (this.audioCtx && this.audioCtx.state === 'suspended') {
-            this.audioCtx.resume();
+            await this.audioCtx.resume();
         }
     }
 
@@ -149,9 +210,9 @@ export class PomodoroTimer {
         this.pauseBtn.disabled = !running;
     }
 
-    playSound() {
+    async playSound() {
         try {
-            this.initAudio();
+            await this.initAudio();
 
             if (this.audioCtx) {
                 const now = this.audioCtx.currentTime;

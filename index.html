@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://images.unsplash.com https://openweathermap.org; connect-src 'self' https://api.unsplash.com https://api.openweathermap.org; object-src 'none'; base-uri 'self'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://images.unsplash.com; connect-src 'self' https://api.unsplash.com https://api.open-meteo.com; object-src 'none'; base-uri 'self'; form-action 'self';">
     <title>ZenFocus Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -15,21 +15,8 @@
                 <div class="weather-icon"></div>
                 <div class="weather-temp">Loading...</div>
                 <div class="weather-desc"></div>
-                <button id="weather-settings-btn" aria-label="Settings">⚙️</button>
             </div>
         </header>
-
-        <dialog id="weather-settings-dialog">
-            <form method="dialog">
-                <h3>Weather Settings</h3>
-                <label for="weather-api-key">OpenWeatherMap API Key:</label>
-                <input type="text" id="weather-api-key" placeholder="Enter API Key">
-                <div class="dialog-buttons">
-                    <button value="cancel">Cancel</button>
-                    <button value="save" id="save-weather-key">Save</button>
-                </div>
-            </form>
-        </dialog>
 
         <main>
             <section id="timer-section" class="widget">
@@ -42,6 +29,7 @@
                     <button id="reset-btn">Reset</button>
                 </div>
                 <div class="timer-settings">
+                    <button id="reset-defaults-btn" type="button" title="Reset Defaults">&#x21ba;</button>
                     <label>Work: <input type="number" id="work-duration" value="25" min="1" max="60"></label>
                     <label>Break: <input type="number" id="break-duration" value="5" min="1" max="30"></label>
                     <label><input type="checkbox" id="auto-start"> Auto-start</label>

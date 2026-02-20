@@ -126,7 +126,8 @@ function runTests() {
             resetBtn: global.document.createElement('button'),
             workInput: global.document.createElement('input'),
             breakInput: global.document.createElement('input'),
-            autoStartCheckbox: global.document.createElement('input')
+            autoStartCheckbox: global.document.createElement('input'),
+            resetDefaultsBtn: global.document.createElement('button')
         };
     }
 
@@ -138,7 +139,7 @@ function runTests() {
         els.workInput.value = '25';
         els.breakInput.value = '5';
 
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
 
         assertEqual(els.display.textContent, '25:00', 'Initial display should be 25:00');
         assertEqual(timer.timeLeft, 25 * 60, 'Initial timeLeft should be 1500 seconds');
@@ -158,7 +159,7 @@ function runTests() {
         console.log('Test: Start Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
 
         timer.start();
 
@@ -184,7 +185,7 @@ function runTests() {
         console.log('Test: Pause Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
 
         timer.start();
         advanceTime(5);
@@ -211,7 +212,7 @@ function runTests() {
         console.log('Test: Reset Timer');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
 
         timer.start();
         advanceTime(100);
@@ -236,7 +237,7 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '25';
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
 
         // Change work input
         els.workInput.value = '30';
@@ -274,7 +275,7 @@ function runTests() {
         els.workInput.value = '1'; // 1 minute
         els.breakInput.value = '5';
         // Pass mockNotifier to verify notification
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
 
         // Manually set timeLeft to 2 seconds to speed up test
         timer.timeLeft = 2;
@@ -312,7 +313,7 @@ function runTests() {
         console.log('Test: Start Timer When Already Running');
         const els = createElements();
         els.workInput.value = '25';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
 
         timer.start();
         const initialTimerId = timer.timerId;
@@ -347,7 +348,7 @@ function runTests() {
         const els = createElements();
         els.workInput.value = '25';
         els.breakInput.value = '5';
-        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, undefined, mockNotifier);
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, undefined, mockNotifier, els.resetDefaultsBtn);
 
         // Scenario: Reset from Break Session
         timer.isWorkSession = false; // Force break session state
@@ -371,6 +372,127 @@ function runTests() {
         assertEqual(timer.isWorkSession, true, 'Should switch to work session');
         assertEqual(timer.timeLeft, 45 * 60, 'Should use current work input value');
         assertEqual(els.display.textContent, '45:00', 'Display should update');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test: Settings loaded from localStorage on init
+    try {
+        resetMocks();
+        global.localStorage.clear();
+        console.log('Test: Settings loaded from localStorage on init');
+
+        // Pre-populate localStorage
+        global.localStorage.setItem('zenFocusTimerSettings', JSON.stringify({
+            work: '30',
+            break: '10',
+            autoStart: true
+        }));
+
+        const els = createElements();
+        els.workInput.value = '25';
+        els.breakInput.value = '5';
+
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
+
+        assertEqual(String(els.workInput.value), '30', 'Work input should be loaded from localStorage');
+        assertEqual(String(els.breakInput.value), '10', 'Break input should be loaded from localStorage');
+        assertEqual(els.autoStartCheckbox.checked, true, 'Auto-start should be loaded from localStorage');
+        assertEqual(timer.timeLeft, 30 * 60, 'timeLeft should reflect loaded work duration');
+        assertEqual(els.display.textContent, '30:00', 'Display should show loaded work duration');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test: Changing inputs persists to localStorage
+    try {
+        resetMocks();
+        global.localStorage.clear();
+        console.log('Test: Changing inputs persists to localStorage');
+
+        const els = createElements();
+        els.workInput.value = '25';
+        els.breakInput.value = '5';
+
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
+
+        // Change work input and fire change event
+        els.workInput.value = '40';
+        if (els.workInput.listeners['change']) {
+            els.workInput.listeners['change'].forEach(cb => cb({ target: els.workInput }));
+        }
+
+        let stored = JSON.parse(global.localStorage.getItem('zenFocusTimerSettings'));
+        assertEqual(String(stored.work), '40', 'Work duration should be persisted');
+        assertEqual(String(stored.break), '5', 'Break duration should be persisted');
+
+        // Change break input and fire change event
+        els.breakInput.value = '15';
+        if (els.breakInput.listeners['change']) {
+            els.breakInput.listeners['change'].forEach(cb => cb({ target: els.breakInput }));
+        }
+
+        stored = JSON.parse(global.localStorage.getItem('zenFocusTimerSettings'));
+        assertEqual(String(stored.break), '15', 'Break duration should be updated in localStorage');
+
+        // Change auto-start and fire change event
+        els.autoStartCheckbox.checked = true;
+        if (els.autoStartCheckbox.listeners['change']) {
+            els.autoStartCheckbox.listeners['change'].forEach(cb => cb({ target: els.autoStartCheckbox }));
+        }
+
+        stored = JSON.parse(global.localStorage.getItem('zenFocusTimerSettings'));
+        assertEqual(stored.autoStart, true, 'Auto-start should be persisted as true');
+
+        console.log('PASS');
+        passed++;
+    } catch (e) {
+        console.error('FAIL:', e.message);
+        failed++;
+    }
+
+    // Test: Reset defaults restores 25/5/unchecked and persists
+    try {
+        resetMocks();
+        global.localStorage.clear();
+        console.log('Test: Reset defaults restores 25/5/unchecked and persists');
+
+        const els = createElements();
+        els.workInput.value = '40';
+        els.breakInput.value = '15';
+        els.autoStartCheckbox.checked = true;
+
+        // Save non-default settings to localStorage
+        global.localStorage.setItem('zenFocusTimerSettings', JSON.stringify({
+            work: '40',
+            break: '15',
+            autoStart: true
+        }));
+
+        const timer = new PomodoroTimer(els.display, els.startBtn, els.pauseBtn, els.resetBtn, els.workInput, els.breakInput, els.autoStartCheckbox, mockNotifier, els.resetDefaultsBtn);
+
+        // Click reset defaults
+        timer.resetDefaults();
+
+        assertEqual(String(els.workInput.value), '25', 'Work input should be reset to 25');
+        assertEqual(String(els.breakInput.value), '5', 'Break input should be reset to 5');
+        assertEqual(els.autoStartCheckbox.checked, false, 'Auto-start should be unchecked');
+        assertEqual(timer.timeLeft, 25 * 60, 'timeLeft should be reset to 25 minutes');
+        assertEqual(els.display.textContent, '25:00', 'Display should show 25:00');
+
+        // Verify persisted to localStorage
+        const stored = JSON.parse(global.localStorage.getItem('zenFocusTimerSettings'));
+        assertEqual(String(stored.work), '25', 'Persisted work should be 25');
+        assertEqual(String(stored.break), '5', 'Persisted break should be 5');
+        assertEqual(stored.autoStart, false, 'Persisted autoStart should be false');
 
         console.log('PASS');
         passed++;
